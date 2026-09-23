@@ -1,0 +1,7 @@
+dist
+node_modules
+package-lock.json
+assets
+samples
+# hand-wrapped word lists read better than one entry per line
+src/core/wordlists.ts

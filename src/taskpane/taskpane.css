@@ -1,0 +1,204 @@
+:root {
+  --text: #242424;
+  --muted: #616161;
+  --line: #d1d1d1;
+  --accent: #1f4e79;
+  --accent-text: #ffffff;
+  --panel: #f5f5f5;
+  --warn: #8a5a00;
+  --error: #a4262c;
+  --focus: #2b579a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font:
+    13px/1.45 'Segoe UI',
+    system-ui,
+    -apple-system,
+    sans-serif;
+  color: var(--text);
+  background: #ffffff;
+}
+
+#app {
+  padding: 12px 14px 20px;
+  max-width: 640px;
+}
+
+h1 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+
+h2 {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 18px 0 6px;
+}
+
+.hint,
+.summary,
+small {
+  color: var(--muted);
+}
+
+.hint {
+  margin: 0 0 12px;
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.controls label {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+button:focus-visible,
+input:focus-visible,
+summary:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+button.primary {
+  align-self: flex-start;
+  padding: 6px 14px;
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+button.primary:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+button.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+#status {
+  min-height: 1.4em;
+  margin: 4px 0;
+}
+
+#status.warn {
+  color: var(--warn);
+}
+
+#status.error {
+  color: var(--error);
+}
+
+.kind-hint {
+  margin: 0 0 6px;
+  color: var(--muted);
+}
+
+details.finding {
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  margin-bottom: 6px;
+  background: #ffffff;
+}
+
+details.finding > summary {
+  padding: 6px 8px;
+  cursor: pointer;
+  list-style-position: inside;
+}
+
+details.finding[open] > summary {
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.term {
+  font-weight: 600;
+}
+
+.msg {
+  color: var(--muted);
+}
+
+.body {
+  padding: 6px 8px 8px;
+}
+
+.actions {
+  margin: 8px 0 0;
+}
+
+#status button.link {
+  margin-left: 4px;
+}
+
+ol.occurrences {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+ol.occurrences li {
+  margin: 2px 0;
+}
+
+button.occ {
+  width: 100%;
+  text-align: left;
+  padding: 4px 6px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: none;
+  color: var(--text);
+}
+
+button.occ:hover {
+  border-color: var(--line);
+  background: var(--panel);
+}
+
+.para {
+  display: inline-block;
+  min-width: 3.2em;
+  color: var(--muted);
+}
+
+.ctx {
+  word-break: break-word;
+}
+
+ul.ignored {
+  margin: 0;
+  padding-left: 18px;
+}
+
+ul.ignored li {
+  margin: 2px 0;
+}
+
+footer {
+  margin-top: 20px;
+}

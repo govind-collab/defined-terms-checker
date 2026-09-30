@@ -82,17 +82,12 @@ const CONTEXT_CHARS = 40;
 const SENTENCE_LOOKBACK = 25;
 const KIND_ORDER: FindingKind[] = ['undefined', 'unused', 'duplicate', 'before-definition', 'lowercase'];
 
-export function analyze(paragraphs: ParagraphInput[], options: AnalysisOptions | null = {}): AnalysisResult {
-  // A JavaScript caller can pass null, a list with holes in it or a paragraph without text; none should throw.
-  const o = options ?? {};
-  const input = paragraphs ?? [];
-  const singleQuotes = o.singleQuotes ?? true;
-  const checkLowercase = o.checkLowercase ?? true;
-  const ignored = new Set(
-    (o.ignore ?? []).filter((t) => typeof t === 'string').map((t) => familyKey(termKey(t))),
-  );
+export function analyze(paragraphs: ParagraphInput[], options: AnalysisOptions = {}): AnalysisResult {
+  const singleQuotes = options.singleQuotes ?? true;
+  const checkLowercase = options.checkLowercase ?? true;
+  const ignored = new Set((options.ignore ?? []).map((t) => familyKey(termKey(t))));
 
-  const scanned = input.map((p, index) => scanParagraph(p, index, singleQuotes));
+  const scanned = paragraphs.map((p, index) => scanParagraph(p, index, singleQuotes));
 
   const terms = new Map<string, { term: string; definitions: Definition[] }>();
   for (const s of scanned) {
@@ -228,12 +223,12 @@ export function analyze(paragraphs: ParagraphInput[], options: AnalysisOptions |
   return {
     findings: kept,
     terms: summaries,
-    stats: { paragraphs: input.length, terms: terms.size, ignored: findings.length - kept.length },
+    stats: { paragraphs: paragraphs.length, terms: terms.size, ignored: findings.length - kept.length },
   };
 }
 
 function scanParagraph(p: ParagraphInput, index: number, singleQuotes: boolean): Scanned {
-  const text = typeof p.text === 'string' ? p.text : '';
+  const text = p.text;
   const tokens = tokenize(text);
   const { definitions, quoted } = findDefinitions(text, tokens, singleQuotes);
   const spans: Array<[number, number]> = [

@@ -407,16 +407,7 @@ describe('analyze: lessons from a real contract', () => {
   });
 });
 
-describe('analyze: hostile input', () => {
-  it('accepts null options, holes in the ignore list and a paragraph without text', () => {
-    expect(analyze([{ text: 'The Party agrees.' }], null).findings).toEqual([]);
-    const holes = { ignore: [undefined, 'Supplier'] } as unknown as AnalysisOptions;
-    const result = run(['The Supplier delivers.', 'The Supplier is paid.'], holes);
-    expect(result.findings).toEqual([]);
-    expect(result.stats.ignored).toBe(1);
-    expect(analyze([{} as ParagraphInput, { text: 'The Party agrees.' }]).stats.paragraphs).toBe(2);
-  });
-
+describe('analyze: edge cases', () => {
   it('stays fast and quiet on a paragraph of 110,000 capitalized words', () => {
     const started = Date.now();
     const result = run([...BASE, 'Contractor '.repeat(110000).trim()]);

@@ -90,15 +90,18 @@ export function analyze(paragraphs: ParagraphInput[], options: AnalysisOptions =
       if (t.capital && !t.sentenceStart && !t.marker && !s.excluded[i]) midCaps.add(stripPossessive(t.text));
     });
   }
-  // "This Master Services Agreement (the "Agreement")": the document title is not an undefined term.
-  const titles = new Set(
-    scanned
-      .filter((s) => s.title)
-      .map((s) => familyKey(termKey(stripLeadingMarkers(s.text).replace(/["“”„«»'‘’]/g, ''))))
-      .filter((k) => k !== ''),
-  );
+  // A title, or a phrase a title starts with, is not an undefined term wherever it appears.
+  const titles = new Set<string>();
+  const titleHeads = new Set<string>();
+  for (const s of scanned) {
+    if (!s.title) continue;
+    const words = termKey(stripLeadingMarkers(s.text).replace(/["“”„«»'‘’]/g, '')).split(' ');
+    if (words[0] === '') continue;
+    titles.add(familyKey(words.join(' ')));
+    for (let n = 1; n < words.length; n++) titleHeads.add(familyKey(words.slice(0, n).join(' ')));
+  }
   const candidates = new Map<string, Candidate>();
-  for (const s of scanned) if (!s.heading) collectCandidates(s, midCaps, titles, candidates);
+  for (const s of scanned) if (!s.heading) collectCandidates(s, midCaps, titles, titleHeads, candidates);
 
   const findings: Finding[] = [];
   for (const [key, c] of candidates) {
@@ -140,7 +143,7 @@ export function analyze(paragraphs: ParagraphInput[], options: AnalysisOptions =
     }
     // Only earlier paragraphs count: "Acme Analytics Inc. ... ("Acme")" names the party before its short form.
     if (defs.every((d) => d.form === 'inline' && !d.weak)) {
-      const first = defs.map((d) => d.location).sort(byPosition)[0];
+      const first = defs[0].location;
       const early = (uses.get(key) ?? []).filter(
         (u) => u.paragraph < first.paragraph && !scanned[u.paragraph].heading,
       );
@@ -237,6 +240,7 @@ function matchUses(scanned: Scanned[], terms: Map<string, DefinedTerm>): Uses {
 function scanParagraph(p: ParagraphInput, index: number, singleQuotes: boolean): Scanned {
   const text = p.text;
   const tokens = tokenize(text);
+  const allCaps = isAllCaps(tokens);
   const { definitions, quoted } = findDefinitions(text, tokens, singleQuotes);
   const spans: Array<[number, number]> = [
     ...quoted.map((q): [number, number] => [q.start, q.end]),
@@ -256,8 +260,8 @@ function scanParagraph(p: ParagraphInput, index: number, singleQuotes: boolean):
     text,
     tokens,
     definitions,
-    heading: headingLike(p, tokens, definitions.length > 0),
-    title: p.heading === true || isAllCaps(tokens),
+    heading: headingLike(p, tokens, allCaps, definitions.length > 0),
+    title: p.heading === true || allCaps,
     excluded,
     matches: [],
     occurrences: new Map(),
@@ -269,11 +273,10 @@ function isAllCaps(tokens: Token[]): boolean {
   return lettered.length > 0 && lettered.every((t) => t.caps || t.text.length === 1);
 }
 
-function headingLike(p: ParagraphInput, tokens: Token[], hasDefinition: boolean): boolean {
-  if (p.heading) return true;
+function headingLike(p: ParagraphInput, tokens: Token[], allCaps: boolean, hasDefinition: boolean): boolean {
+  if (p.heading || allCaps) return true;
   const words = tokens.filter((t) => !t.marker);
   if (words.length === 0) return true;
-  if (isAllCaps(tokens)) return true;
   if (hasDefinition) return false;
   // Short and unpunctuated reads as a title or a table cell. "the Services; and" is a list item.
   const trimmed = p.text
@@ -320,12 +323,12 @@ function collectCandidates(
   s: Scanned,
   midCaps: Set<string>,
   titles: Set<string>,
+  titleHeads: Set<string>,
   out: Map<string, Candidate>,
 ): void {
   const { text, tokens, excluded } = s;
   const covered = new Uint8Array(tokens.length);
   for (const m of s.matches) for (let i = m.first; i <= m.last; i++) covered[i] = 1;
-  const titleList = [...titles];
 
   const usable = (i: number): boolean => i < tokens.length && !excluded[i] && tokens[i].capital;
   // "Board of Directors", "Tier 2 Support". A number after a cross-reference word ("Section 3") does not join.
@@ -370,7 +373,7 @@ function collectCandidates(
     if (uncovered.length < phrase.length && uncovered.every((k) => PLACES.has(normalizeWord(tokens[k].text))))
       return;
     const key = familyKey(lowers.join(' '));
-    if (titles.has(key) || (words.length > 1 && titleList.some((t) => t.startsWith(key + ' ')))) return;
+    if (titles.has(key) || (words.length > 1 && titleHeads.has(key))) return;
     if (capitals.length >= 2 && capitals.every((k) => tokens[k].caps)) return;
     if (capitals.length === 1) {
       const k = capitals[0];
@@ -476,7 +479,7 @@ function splitRun(run: number[], tokens: Token[], covered: Uint8Array): number[]
       current = [];
     } else if (coveredCount === 0) {
       if (current.length > 0) current.push(joiners[k - 1]);
-      for (const k of seg) current.push(k);
+      current.push(...seg);
     } else {
       if (current.length > 0) phrases.push(current);
       phrases.push(seg);
@@ -517,10 +520,6 @@ function push<T>(map: Map<string, T[]>, key: string, value: T): void {
   const list = map.get(key);
   if (list) list.push(value);
   else map.set(key, [value]);
-}
-
-function byPosition(a: Location, b: Location): number {
-  return a.paragraph - b.paragraph || a.start - b.start;
 }
 
 function compareFindings(a: Finding, b: Finding): number {

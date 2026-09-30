@@ -276,7 +276,10 @@ function headingLike(p: ParagraphInput, tokens: Token[], hasDefinition: boolean)
   if (isAllCaps(tokens)) return true;
   if (hasDefinition) return false;
   // Short and unpunctuated reads as a title or a table cell. "the Services; and" is a list item.
-  const trimmed = p.text.trim().replace(/\s+(?:and|or)$/iu, '');
+  const trimmed = p.text
+    .trim()
+    .replace(/[)\]"”’'»]+$/u, '')
+    .replace(/\s+(?:and|or)$/iu, '');
   return words.length <= MAX_HEADING_WORDS && !/[.;:!?,]$/.test(trimmed);
 }
 

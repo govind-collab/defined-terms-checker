@@ -126,6 +126,11 @@ describe('analyze: used but never defined', () => {
     expect(result.findings).toEqual([]);
   });
 
+  it('reads a short sentence that ends in a closing quote as a sentence', () => {
+    const result = run([...BASE, 'The Party must mark the Seller Materials "Draft."']);
+    expect(only(result, 'undefined')).toEqual(['Seller Materials']);
+  });
+
   it('ignores cross-references, places, statutes, company names and honorifics', () => {
     const result = run([
       'See Section 3.1, Schedule 2, Exhibit A and this Clause. The Companies Act 2006 and the Data Protection Regulations apply.',

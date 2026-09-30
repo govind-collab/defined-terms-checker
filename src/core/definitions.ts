@@ -69,7 +69,7 @@ const REFERENCE_RE = new RegExp(
 );
 const MEANS_RE = new RegExp(
   LEAD +
-    String.raw`(?:means?|refers?\s+to|(?:has|have)\s+the\s+(?:following\s+)?meanings?|(?:is|are)\s+defined\s+as|be\s+construed\s+(?:as|to\s+mean)|denotes?|signif(?:y|ies)|(?:is|are)\s+a\s+reference\s+to)\b`,
+    String.raw`(?:means?|refers?\s+to|(?:has|have)\s+the\s+(?:following\s+)?meanings?|(?:is|are)\s+defined\s+as|be\s+construed\s+(?:as|to\s+mean))\b`,
   'iu',
 );
 const INCLUDES_RE = new RegExp(LEAD + String.raw`includes?\b`, 'iu');
@@ -84,7 +84,7 @@ const CHAIN_RE =
   /^(?:\s*\(?\s*,?\s*(?:and\/or|and|or)?\s*(?:["“„«‟][^"“”„«»‟\n\r\v]{1,120}?["”“»‟]|['‘][^'‘’\n\r\v]{1,120}?['’])\s*\)?)+/u;
 // ... each being referred to individually as a "Party" / hereinafter "Licensor" / called the "Fee"
 const INLINE_LEAD_RE =
-  /(?:referred\s+to(?:\s+herein)?(?:\s+(?:individually|collectively|jointly|severally|together))?\s+as|hereinafter(?:\s+referred\s+to\s+as)?|hereafter(?:\s+referred\s+to\s+as)?|known\s+as|called|defined\s+as|designated\s+as|named\s+as|(?:individually|collectively|jointly|severally|together)(?:\s+as)?|each(?:\s+of\s+them)?)\s+(?:(?:the|a|an|this)\s+)?$/iu;
+  /(?:referred\s+to(?:\s+herein)?(?:\s+(?:individually|collectively|jointly|severally|together))?\s+as|(?:hereinafter|hereafter)(?:\s+referred\s+to\s+as)?|known\s+as|called|defined\s+as|(?:individually|collectively|jointly|severally|together)(?:\s+as)?|each(?:\s+of\s+them)?)\s+(?:(?:the|a|an|this)\s+)?$/iu;
 // Inside "(...)", words before the quote that make it a reference.
 const PAREN_NEGATIVE_RE =
   /\b(?:defin\w*|see|including|includes|excluding|other\s+than|except|pursuant|meaning|referred\s+to\s+in|under|within|e\.g|cf|such\s+as)\b/iu;

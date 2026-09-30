@@ -105,6 +105,16 @@ describe('findDefinitions: definitions-section forms', () => {
       ['Company', 'reference', false],
     ]);
     expect(defs('"Tax" is as defined in the Tax Deed.')).toEqual([['Tax', 'reference', false]]);
+    expect(defs('"Charges" bears the meaning ascribed to it in clause 4.')).toEqual([
+      ['Charges', 'reference', false],
+    ]);
+    expect(defs('"Loss" has the meaning attributed to it in the Deed.')).toEqual([
+      ['Loss', 'reference', false],
+    ]);
+    expect(defs('"Buyer" and "Seller" have the respective meanings assigned in the recitals.').length).toBe(
+      2,
+    );
+    expect(defs('"Fee" has the meaning specified in Schedule 1.')).toEqual([['Fee', 'reference', false]]);
   });
 
   it('finds the colon and list forms', () => {
@@ -169,6 +179,12 @@ describe('findDefinitions: inline forms', () => {
       ).map((d) => d[0]),
     ).toEqual(['Party', 'Parties']);
     expect(defs('Acme Corp., hereinafter "Seller", agrees')).toEqual([['Seller', 'inline', false]]);
+    expect(
+      defs('Beta plc, hereafter the "Buyer", and Acme Ltd, known as the "Vendor", agree').map((d) => d[0]),
+    ).toEqual(['Buyer', 'Vendor']);
+    expect(defs('the software defined as the "Product" in Schedule 1')).toEqual([
+      ['Product', 'inline', false],
+    ]);
   });
 
   it('does not treat a reference inside parentheses as a definition', () => {

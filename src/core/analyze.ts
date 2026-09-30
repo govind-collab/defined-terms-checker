@@ -54,10 +54,9 @@ interface Candidate {
   locations: Location[];
 }
 
-// Clause 32.8(c) (Payments by the Supplier): the bracketed clause title is excluded.
+// Clause 32.8(c) (Payments by the Supplier)
 const TITLE_PAREN_RE = new RegExp(CROSSREF_SOURCE + String.raw`\s*\(([^()\n]{1,80})\)`, 'gu');
 const YEAR_RE = /^(?:1[89]|20)\d\d$/;
-// 52.203-19, 200.303: the numbers regulations are cited by.
 const CITATION_NUMBER_RE = /^\d{1,3}\.\d{2,4}(?:-\d{1,3})?$/;
 // After a run-in heading: ": The Contractor shall", ". Any dispute". A lowercase start is a definition.
 const HEADING_TAIL_RE = /^[:.]\s*(?!\p{Ll})/u;
@@ -127,7 +126,7 @@ export function analyze(paragraphs: ParagraphInput[], options: AnalysisOptions =
         locations: defs.map((d) => d.location),
       });
     }
-    // A cross-reference adds no definition, and 2 definitions in 1 paragraph are 1 drafting event.
+    // A cross-reference adds no definition, and two definitions in one paragraph are one drafting event.
     const strong = defs.filter((d) => !d.weak && d.form !== 'reference');
     const firstPerParagraph = strong.filter(
       (d, i) => i === 0 || d.location.paragraph !== strong[i - 1].location.paragraph,
@@ -230,7 +229,7 @@ function matchUses(scanned: Scanned[], terms: Map<string, DefinedTerm>): Uses {
       push(uses, m.key, loc);
       const family = familyKey(m.key);
       familyUses.set(family, (familyUses.get(family) ?? 0) + 1);
-      // A 1-letter term ("A" means Schedule A) would flag every article, so the lowercase check skips it.
+      // A one-letter term ("A" means Schedule A) would flag every article, so the lowercase check skips it.
       if (m.casing === 'lower' && !s.heading && m.term.length > 1) push(lowercase, m.key, loc);
     }
   }
@@ -286,7 +285,7 @@ function headingLike(p: ParagraphInput, tokens: Token[], allCaps: boolean, hasDe
   return words.length <= MAX_HEADING_WORDS && !/[.;:!?,]$/.test(trimmed);
 }
 
-// "Scope of Work: The Contractor shall ...": a Title Case line opener ending in ":" or "." before a capital.
+// A Title Case line opener that ends in ":" or "." before a capital, as in "Scope of Work: The Contractor shall".
 function runInHeadingSpans(text: string, tokens: Token[]): Array<[number, number]> {
   const spans: Array<[number, number]> = [];
   let first = 0;
@@ -331,7 +330,7 @@ function collectCandidates(
   for (const m of s.matches) for (let i = m.first; i <= m.last; i++) covered[i] = 1;
 
   const usable = (i: number): boolean => i < tokens.length && !excluded[i] && tokens[i].capital;
-  // "Board of Directors", "Tier 2 Support". A number after a cross-reference word ("Section 3") does not join.
+  // "of" and a number join words, but not a number after a cross-reference word ("Section 3").
   const joiner = (i: number): boolean =>
     !excluded[i] &&
     (RUN_JOINERS.has(tokens[i].text.toLowerCase()) ||
@@ -361,7 +360,6 @@ function collectCandidates(
     const capitals = phrase.filter((k) => tokens[k].capital);
     if (words.length > 1 && lowers.some((w) => CORPORATE_SUFFIXES.has(w))) return;
     if (HONORIFICS.has(lowers[0])) return;
-    // "Section 3", "Exhibit A", "this Schedule": cross-references.
     if (STRUCTURAL_WORDS.has(lowers[0]) && words.length <= 2) return;
     if (lowers.some((w) => INSTRUMENT_WORDS.has(w))) return;
     if (next !== undefined && YEAR_RE.test(next.text) && adjacent(text, tokens[last], next)) return;
@@ -423,12 +421,12 @@ function collectCandidates(
   }
 }
 
-// "Contractor's Authorized Representative": the possessive ends one phrase and the term is what follows.
+// A possessive ends the phrase, so "Contractor's Authorized Representative" reports the last two words.
 function possessive(text: string, t: Token): boolean {
   return /['’]s$/u.test(t.text) || /['’]/.test(text[t.end] ?? '');
 }
 
-// "the Protocol to Prevent, Suppress and Punish Trafficking in Persons": one instrument name, many capitals.
+// Every capitalized phrase after an instrument word in the same sentence is part of that instrument's title.
 function instrumentEarlier(tokens: Token[], i: number): boolean {
   for (let k = i - 1, n = 0; k >= 0 && n < SENTENCE_LOOKBACK; k--, n++) {
     if (INSTRUMENT_WORDS.has(normalizeWord(tokens[k].text))) return true;
@@ -437,7 +435,6 @@ function instrumentEarlier(tokens: Token[], i: number): boolean {
   return false;
 }
 
-// FAR 52.203-19 Prohibition on Requiring Certain Internal Confidentiality Agreements: a cited clause title.
 function citationBefore(tokens: Token[], i: number): boolean {
   return tokens
     .slice(Math.max(0, i - 3), i)

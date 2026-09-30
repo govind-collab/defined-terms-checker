@@ -211,7 +211,7 @@ function classifyQuoted(
   const rest = chain ? after.slice(chain[0].length) : after;
   if (REFERENCE_RE.test(rest)) return { form: 'reference', weak: false };
   if (MEANS_RE.test(rest)) return { form: 'means', weak: false };
-  // "Confidential Information" does not include ...: a carve-out, whatever position it sits in.
+  // a carve-out, not a definition, wherever it sits
   if (NEGATIVE_RE.test(rest)) return null;
   if (INCLUDES_RE.test(rest)) return { form: 'includes', weak: true };
 
@@ -320,7 +320,7 @@ function plausibleUnquotedTerm(term: string): boolean {
   return !isPlaceName(lowers);
 }
 
-// The capitalized phrase that ends right in front of an opening bracket: "Statement of Work" in "Statement of Work (SOW)".
+// the capitalized phrase right in front of an opening bracket
 function runBefore(text: string, tokens: Token[], open: number): Token[] {
   let last = -1;
   for (let k = 0; k < tokens.length && tokens[k].end <= open; k++) last = k;
@@ -392,7 +392,7 @@ function bracketPieces(text: string, content: string, base: number): DefinitionM
     while (i < words.length) {
       const w = words[i][0];
       const next = words[i + 1];
-      // "(3 Siblings or 2 Siblings and 1 Parent)": a leading number is a count.
+      // a leading number is a count, not part of the term
       if (isCapital(w) || (i > first && /^\p{N}/u.test(w))) i++;
       else if (i > first && PIECE_CONNECTORS.has(w.toLowerCase()) && next !== undefined && isCapital(next[0]))
         i++;

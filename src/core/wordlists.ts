@@ -6,7 +6,7 @@ export const TERM_CONNECTORS = new Set([
   'an', 'this', '&', 'de', 'la', 'du', 'von', 'van', 'der',
 ]);
 
-/** Join 2 capitalized words into 1 candidate. "and" is left out: "Buyer and Seller" is 2 terms. */
+/** Words that join two capitalized words into one candidate. "and" stays out: "Buyer and Seller" is two terms. */
 export const RUN_JOINERS = new Set(['of', 'for', 'in', 'on', '&']);
 
 /** Never a defined term on their own, even in quotes: a stray quote mark can wrap "The" or "And". */

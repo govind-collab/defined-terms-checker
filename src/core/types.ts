@@ -7,7 +7,6 @@ export interface ParagraphInput {
 
 /** Where something is in the document, in terms the Word search API can find again. */
 export interface Location {
-  /** Index into the paragraph array that was analyzed. */
   paragraph: number;
   start: number;
   end: number;
@@ -43,7 +42,7 @@ export interface Finding {
 export interface AnalysisOptions {
   /** Treat 'single quoted' phrases as possible defined terms (UK drafting). Default true. */
   singleQuotes?: boolean;
-  /** Report lowercase uses of defined terms. Default true. */
+  /** Default true. */
   checkLowercase?: boolean;
   /** Terms to leave out of every finding, in any casing. */
   ignore?: string[];

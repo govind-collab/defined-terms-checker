@@ -9,7 +9,6 @@ export interface Token {
   /** Part of a list marker such as "1.1", "(a)" or "(iv)". */
   marker: boolean;
   capital: boolean;
-  /** Two or more letters, all uppercase. */
   caps: boolean;
 }
 

@@ -18,7 +18,7 @@ This Mutual Non-Disclosure Agreement is made on 1 May 2026 between Acme Analytic
 "Purpose" means the evaluation and negotiation of the Project.
 "Recipient" means the Party receiving Confidential Information.
 "Representatives" means a Party's directors, officers, employees, Affiliates and professional advisers.
-"Survival Period" means the period described in clause 4.1.
+"Survival Period" means the 5 years after this Agreement ends.
 # 2. Confidentiality
 2.1 The Recipient shall keep the Confidential Information confidential and shall not disclose it to any person other than its Representatives who need to know it for the Purpose, or in a Compelled Disclosure.
 2.2 The Recipient shall ensure that its representatives comply with this clause 2.

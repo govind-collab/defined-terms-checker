@@ -218,6 +218,14 @@ describe('analyze: used before its inline definition', () => {
     expect(result.findings[0].message).toBe('Used 1 time before its definition in paragraph 3.');
   });
 
+  it('does not report a use before a weak long-form definition', () => {
+    const result = run([
+      'The Contractor prepares a Statement of Work for each project.',
+      'Work is described in the Statement of Work ("SOW"). The SOW is signed by both sides.',
+    ]);
+    expect(result.findings).toEqual([]);
+  });
+
   it('stays quiet when the term also has a definitions-section entry', () => {
     const result = run([
       'The Recipient shall keep the information secret.',
@@ -396,6 +404,15 @@ describe('analyze: lessons from a real contract', () => {
       'The Contractor shall perform.',
     ]);
     expect(contact.findings).toEqual([]);
+    const twice = run([
+      'The parties agree an amount (the "Fee"). "Fee" means the amount in Schedule 1.',
+      '"Fee" means the total amount. The Fee is due on signing.',
+    ]);
+    expect(only(twice, 'duplicate')).toEqual(['Fee']);
+    expect(twice.findings[0].locations.map((l) => [l.paragraph, l.start])).toEqual([
+      [0, 34],
+      [1, 1],
+    ]);
   });
 
   it('does not report "U.S." as an undefined term', () => {

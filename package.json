@@ -10,7 +10,7 @@
     "url": "https://github.com/govind-collab/defined-terms-checker.git"
   },
   "engines": {
-    "node": ">=20"
+    "node": "^22.15.0 || >=24"
   },
   "scripts": {
     "build": "webpack --mode production",

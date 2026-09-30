@@ -24,7 +24,7 @@ term can be put on an ignore list, kept per document.
 
 ## Try it
 
-You need Node 20 or newer and Word (Microsoft 365 on Windows or Mac, or Word on the web).
+You need Node 22.15 or newer and Word (Microsoft 365 on Windows or Mac, or Word on the web).
 
 ```bash
 npm install

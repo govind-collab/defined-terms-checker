@@ -24,7 +24,7 @@ const KIND_HINTS: Record<FindingKind, string> = {
   undefined:
     'Capitalized like a defined term, with no definition anywhere. A name or a place can get through; use Ignore.',
   unused: 'A definition nothing refers to, often left behind after a clause was deleted.',
-  duplicate: 'The same term defined in 2 places. Cross-references and "includes" are not counted.',
+  duplicate: 'The same term defined in more than 1 place. Cross-references and "includes" are not counted.',
   'before-definition': 'Used earlier than the parenthetical that defines it.',
   lowercase:
     "The words of a defined term without their capitals. Inside the term's own definition this is not reported.",
@@ -164,8 +164,8 @@ function render(snapshot: DocumentSnapshot, result: AnalysisResult): void {
   const { stats } = result;
   const ignoredNote = stats.ignored > 0 ? ` ${stats.ignored} hidden by the ignore list.` : '';
   summary.textContent =
-    `${stats.paragraphs} paragraphs read, ${stats.terms} defined terms, ` +
-    `${result.findings.length} finding${result.findings.length === 1 ? '' : 's'}.` +
+    `${count(stats.paragraphs, 'paragraph')} read, ${count(stats.terms, 'defined term')}, ` +
+    `${count(result.findings.length, 'finding')}.` +
     ignoredNote +
     ` ${SOURCE_TEXT[snapshot.textSource]}`;
   summary.hidden = false;
@@ -250,6 +250,10 @@ function setStatus(text: string, tone?: 'warn' | 'error', action?: { label: stri
     button.addEventListener('click', action.run);
     status.append(' ', button);
   }
+}
+
+function count(n: number, noun: string): string {
+  return `${n} ${noun}${n === 1 ? '' : 's'}`;
 }
 
 function setBusy(busy: boolean): void {

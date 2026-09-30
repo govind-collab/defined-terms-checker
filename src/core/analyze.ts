@@ -139,7 +139,7 @@ export function analyze(paragraphs: ParagraphInput[], options: AnalysisOptions =
       });
     }
     // Only earlier paragraphs count: "Acme Analytics Inc. ... ("Acme")" names the party before its short form.
-    if (defs.every((d) => d.form === 'inline')) {
+    if (defs.every((d) => d.form === 'inline' && !d.weak)) {
       const first = defs.map((d) => d.location).sort(byPosition)[0];
       const early = (uses.get(key) ?? []).filter(
         (u) => u.paragraph < first.paragraph && !scanned[u.paragraph].heading,

@@ -17,17 +17,19 @@ import {
   CALENDAR_WORDS,
   CITATION_WORDS,
   CORPORATE_SUFFIXES,
+  CROSSREF_SOURCE,
   FUNCTION_WORDS,
   GEO_ACRONYMS,
   HONORIFICS,
   INSTRUMENT_WORDS,
   PLACES,
-  PUBLIC_BODIES,
   ROMAN_NUMERAL_RE,
   RUN_JOINERS,
   STREET_TAILS,
   STRUCTURAL_WORDS,
+  TERM_CONNECTORS,
   isPlaceName,
+  isPublicBody,
 } from './wordlists';
 
 interface Scanned {
@@ -53,34 +55,24 @@ interface Candidate {
 }
 
 // Clause 32.8(c) (Payments by the Supplier): the bracketed clause title is not a term.
-const TITLE_PAREN_RE =
-  /\b(?:Clause|Section|Schedule|Paragraph|Part|Article|Annex|Appendix|Exhibit|Recital|Chapter)s?\s+\d[\w.()]*\s*\(([^()\n]{1,80})\)/gu;
+const TITLE_PAREN_RE = new RegExp(CROSSREF_SOURCE + String.raw`\s*\(([^()\n]{1,80})\)`, 'gu');
 const YEAR_RE = /^(?:1[89]|20)\d\d$/;
 // 52.203-19, 200.303: the numbers regulations are cited by.
 const CITATION_NUMBER_RE = /^\d{1,3}\.\d{2,4}(?:-\d{1,3})?$/;
 // After a run-in heading: ": The Contractor shall", ". Any dispute", ": MC-2026-01". A lowercase start is a definition.
 const HEADING_TAIL_RE = /^[:.]\s*(?!\p{Ll})/u;
-const HEADING_CONNECTORS = new Set([
-  'of',
-  'and',
-  'or',
-  'for',
-  'in',
-  'on',
-  'to',
-  'the',
-  'a',
-  'an',
-  'by',
-  'with',
-  '&',
-]);
 const MAX_HEADING_WORDS = 12;
 /** Same limit as parseTerm: a capitalized run longer than this is a title or a list, not a missing definition. */
 const MAX_CANDIDATE_WORDS = 8;
 const CONTEXT_CHARS = 40;
 const SENTENCE_LOOKBACK = 25;
-const KIND_ORDER: FindingKind[] = ['undefined', 'unused', 'duplicate', 'before-definition', 'lowercase'];
+export const KIND_ORDER: FindingKind[] = [
+  'undefined',
+  'unused',
+  'duplicate',
+  'before-definition',
+  'lowercase',
+];
 
 export function analyze(paragraphs: ParagraphInput[], options: AnalysisOptions = {}): AnalysisResult {
   const singleQuotes = options.singleQuotes ?? true;
@@ -287,7 +279,7 @@ function runInHeadingSpans(text: string, tokens: Token[]): Array<[number, number
     for (let k = first + 1; k < tokens.length && k - first < MAX_HEADING_WORDS; k++) {
       const t = tokens[k];
       if (t.marker || !/^[\s,]+$/.test(text.slice(tokens[k - 1].end, t.start))) break;
-      if (t.capital || HEADING_CONNECTORS.has(t.text.toLowerCase())) last = k;
+      if (t.capital || TERM_CONNECTORS.has(t.text.toLowerCase())) last = k;
       else break;
     }
     while (last > first && !tokens[last].capital) last--;
@@ -477,19 +469,6 @@ function splitRun(run: number[], tokens: Token[], covered: Uint8Array): number[]
   });
   if (current.length > 0) phrases.push(current);
   return phrases;
-}
-
-/** The longest entry in PUBLIC_BODIES, so the loop below never walks a long phrase word by word. */
-const MAX_BODY_WORDS = Math.max(...[...PUBLIC_BODIES].map((p) => p.split(' ').length));
-
-/** "Congress", "Comptroller General", "USAID Office of Inspector General", "EU Sanctions List". */
-function isPublicBody(lowers: string[]): boolean {
-  const bare = lowers.map((w) => w.replace(/\./g, ''));
-  for (let k = 1; k <= Math.min(bare.length, MAX_BODY_WORDS); k++) {
-    if (PUBLIC_BODIES.has(bare.slice(0, k).join(' ')) || PUBLIC_BODIES.has(bare.slice(-k).join(' ')))
-      return true;
-  }
-  return bare.length > 1 && GEO_ACRONYMS.has(bare[0]);
 }
 
 function locate(s: Scanned, start: number, end: number): Location {

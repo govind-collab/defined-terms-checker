@@ -58,6 +58,9 @@ export const PAREN_LABELS = new Set([
   'unsigned', 'redacted', 'illegible', 'blank', 'left', 'right', 'above', 'below',
 ]);
 
+/** "Clause 32.8(c)", "Section 3": a cross-reference with its number, as a regex source. */
+export const CROSSREF_SOURCE = String.raw`\b(?:Clause|Section|Schedule|Paragraph|Part|Article|Annex|Appendix|Exhibit|Recital|Chapter)s?\s+\d[\w.()]*`;
+
 /** Cross-reference words. "Section 3", "Schedule 2" and "this Clause" are not defined terms. */
 export const STRUCTURAL_WORDS = new Set([
   'section', 'sections', 'subsection', 'subsections', 'clause', 'clauses', 'sub-clause',
@@ -191,7 +194,7 @@ const CITIES = [
   'toronto', 'vancouver', 'sydney', 'melbourne', 'paris', 'berlin', 'frankfurt', 'munich',
   'amsterdam', 'zurich', 'geneva', 'dublin', 'edinburgh', 'manchester', 'birmingham', 'mumbai',
   'bangalore', 'bengaluru', 'delhi', 'new delhi', 'tokyo', 'shanghai', 'beijing', 'tel aviv',
-  'washington', 'durham', 'raleigh', 'charlotte', 'philadelphia', 'phoenix', 'san diego', 'san jose',
+  'durham', 'raleigh', 'charlotte', 'philadelphia', 'phoenix', 'san diego', 'san jose',
   'columbus', 'portland', 'salem', 'eugene', 'sacramento', 'oakland', 'las vegas', 'reno', 'tucson',
   'albuquerque', 'santa fe', 'salt lake city', 'boise', 'helena', 'cheyenne', 'bismarck', 'pierre',
   'lincoln', 'omaha', 'topeka', 'kansas city', 'oklahoma city', 'tulsa', 'little rock',
@@ -224,8 +227,9 @@ export const PLACE_PREFIXES = new Set([
 
 export const ROMAN_NUMERAL_RE = /^M{0,3}(?:CM|CD|D?C{0,3})(?:XC|XL|L?X{0,3})(?:IX|IV|V?I{0,3})$/;
 
-/** The longest entry in PLACES, so the loop below never walks a long phrase word by word. */
+// The longest entries, so the two loops below never walk a long phrase word by word.
 const MAX_PLACE_WORDS = Math.max(...[...PLACES].map((p) => p.split(' ').length));
+const MAX_BODY_WORDS = Math.max(...[...PUBLIC_BODIES].map((p) => p.split(' ').length));
 
 /** "Delaware", "State of New York", "Courts of England": a place name, with or without a prefix. */
 export function isPlaceName(lowers: string[]): boolean {
@@ -236,4 +240,14 @@ export function isPlaceName(lowers: string[]): boolean {
     return head.every((w) => PLACE_PREFIXES.has(w) || PLACES.has(w));
   }
   return false;
+}
+
+/** "Congress", "Comptroller General", "USAID Office of Inspector General", "EU Sanctions List". */
+export function isPublicBody(lowers: string[]): boolean {
+  const bare = lowers.map((w) => w.replace(/\./g, ''));
+  for (let k = 1; k <= Math.min(bare.length, MAX_BODY_WORDS); k++) {
+    if (PUBLIC_BODIES.has(bare.slice(0, k).join(' ')) || PUBLIC_BODIES.has(bare.slice(-k).join(' ')))
+      return true;
+  }
+  return bare.length > 1 && GEO_ACRONYMS.has(bare[0]);
 }

@@ -3,6 +3,7 @@ import { WORD_RE, isCapital, isCaps, isWordChar, normalizeWord, termKey } from '
 import {
   CALENDAR_WORDS,
   CORPORATE_SUFFIXES,
+  CROSSREF_SOURCE,
   FUNCTION_WORDS,
   INSTRUMENT_WORDS,
   LABEL_WORDS,
@@ -97,8 +98,7 @@ const BRACKET_RE = /[([]([^()[\]"“”„«»'‘’\n\r\v]{1,100})[)\]]/gu;
 const ACRONYM_RE = /^[A-Z][A-Z0-9.&-]{1,11}$/;
 const BRACKET_WORD_RE = /[^\s,;/]+|[,;/]/gu;
 // A bracket right after a cross-reference holds a clause title: Clause 32.8(c) (Payments by the Supplier).
-const CROSSREF_BEFORE_RE =
-  /\b(?:Clause|Section|Schedule|Paragraph|Part|Article|Annex|Appendix|Exhibit|Recital|Chapter)s?\s+\d[\w.()]*\s*$/u;
+const CROSSREF_BEFORE_RE = new RegExp(CROSSREF_SOURCE + String.raw`\s*$`, 'u');
 const PIECE_SEPARATORS = new Set([',', ';', '/', 'and', 'or']);
 const PIECE_LEAD_INS = new Set([
   'each',

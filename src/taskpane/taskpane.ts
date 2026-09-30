@@ -1,4 +1,4 @@
-import { analyze } from '../core/analyze';
+import { KIND_ORDER, analyze } from '../core/analyze';
 import type { AnalysisResult, Finding, FindingKind, Location } from '../core/types';
 import {
   apiVersion,
@@ -11,8 +11,6 @@ import {
   type TextSource,
 } from '../office/document';
 import { loadIgnored, saveIgnored } from '../office/storage';
-
-const KIND_ORDER: FindingKind[] = ['undefined', 'unused', 'duplicate', 'before-definition', 'lowercase'];
 
 const KIND_LABELS: Record<FindingKind, string> = {
   undefined: 'Used but never defined',
@@ -133,31 +131,31 @@ async function goTo(loc: Location): Promise<void> {
   }
 }
 
-function ignore(term: string): void {
-  if (!state.ignored.includes(term)) state.ignored = [...state.ignored, term];
-  saveIgnored(state.ignored);
+function setIgnored(terms: string[], message: string, action?: { label: string; run: () => void }): void {
+  state.ignored = terms;
+  saveIgnored(terms);
   reanalyze();
   renderIgnored();
-  setStatus(`"${term}" is ignored for this document.`, undefined, {
+  setStatus(message, undefined, action);
+}
+
+function ignore(term: string): void {
+  if (state.ignored.includes(term)) return;
+  setIgnored([...state.ignored, term], `"${term}" is ignored for this document.`, {
     label: 'Undo',
     run: () => restore(term),
   });
 }
 
 function restore(term: string): void {
-  state.ignored = state.ignored.filter((t) => t !== term);
-  saveIgnored(state.ignored);
-  reanalyze();
-  renderIgnored();
-  setStatus(`"${term}" is back in the results.`);
+  setIgnored(
+    state.ignored.filter((t) => t !== term),
+    `"${term}" is back in the results.`,
+  );
 }
 
 function restoreAll(): void {
-  state.ignored = [];
-  saveIgnored(state.ignored);
-  reanalyze();
-  renderIgnored();
-  setStatus('The ignore list for this document is empty again.');
+  setIgnored([], 'The ignore list for this document is empty again.');
 }
 
 function render(): void {

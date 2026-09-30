@@ -3,8 +3,6 @@ export interface ParagraphInput {
   text: string;
   /** Heading, title or table-of-contents style. */
   heading?: boolean;
-  /** Sits inside a table cell. */
-  inTable?: boolean;
 }
 
 /** Where something is in the document, in terms the Word search API can find again. */
@@ -63,7 +61,6 @@ export interface AnalysisOptions {
 export interface TermSummary {
   term: string;
   key: string;
-  definitions: Definition[];
   uses: number;
 }
 
@@ -74,6 +71,5 @@ export interface AnalysisResult {
     paragraphs: number;
     terms: number;
     ignored: number;
-    byKind: Record<FindingKind, number>;
   };
 }

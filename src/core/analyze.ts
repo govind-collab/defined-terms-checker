@@ -9,7 +9,7 @@ import type {
   TermSummary,
 } from './types';
 import { adjacent, lineStarts, stripLeadingMarkers, tokenize, type Token } from './tokenize';
-import { findDefinitions, type DefinitionMatch, type QuotedSpan } from './definitions';
+import { findDefinitions, type DefinitionMatch } from './definitions';
 import { TermIndex, type TermMatch } from './matcher';
 import { familyKey, normalizeWord, stripPossessive, termKey } from './normalize';
 import {
@@ -34,7 +34,6 @@ interface Scanned {
   index: number;
   text: string;
   tokens: Token[];
-  quoted: QuotedSpan[];
   definitions: DefinitionMatch[];
   /** Heading, all-caps line, short unpunctuated line: uses count, undefined candidates do not. */
   heading: boolean;
@@ -222,22 +221,14 @@ export function analyze(paragraphs: ParagraphInput[], options: AnalysisOptions |
   }
 
   const kept = findings.filter((f) => !ignored.has(familyKey(f.key))).sort(compareFindings);
-  const byKind = Object.fromEntries(KIND_ORDER.map((k) => [k, 0])) as Record<FindingKind, number>;
-  for (const f of kept) byKind[f.kind]++;
-
   const summaries: TermSummary[] = [...terms]
-    .map(([key, e]) => ({ term: e.term, key, definitions: e.definitions, uses: uses.get(key)?.length ?? 0 }))
+    .map(([key, e]) => ({ term: e.term, key, uses: uses.get(key)?.length ?? 0 }))
     .sort((a, b) => a.key.localeCompare(b.key));
 
   return {
     findings: kept,
     terms: summaries,
-    stats: {
-      paragraphs: input.length,
-      terms: terms.size,
-      ignored: findings.length - kept.length,
-      byKind,
-    },
+    stats: { paragraphs: input.length, terms: terms.size, ignored: findings.length - kept.length },
   };
 }
 
@@ -262,7 +253,6 @@ function scanParagraph(p: ParagraphInput, index: number, singleQuotes: boolean):
     index,
     text,
     tokens,
-    quoted,
     definitions,
     heading: headingLike(p, tokens, definitions.length > 0),
     title: p.heading === true || isAllCaps(tokens),

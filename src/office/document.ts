@@ -48,7 +48,7 @@ function textSource(): TextSource {
 export async function readDocument(): Promise<DocumentSnapshot> {
   return Word.run(async (context) => {
     const paragraphs = context.document.body.paragraphs;
-    paragraphs.load('items/text,items/styleBuiltIn,items/tableNestingLevel');
+    paragraphs.load('items/text,items/styleBuiltIn');
     await context.sync();
 
     const source = textSource();
@@ -68,7 +68,6 @@ export async function readDocument(): Promise<DocumentSnapshot> {
       paragraphs: paragraphs.items.map((p, i) => ({
         text: clean[i]?.value ?? p.text,
         heading: HEADING_STYLE_RE.test(p.styleBuiltIn),
-        inTable: p.tableNestingLevel > 0,
       })),
       textSource: source,
     };

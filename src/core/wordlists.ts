@@ -75,12 +75,6 @@ export const CALENDAR_WORDS = new Set([
   'sunday', 'jan', 'feb', 'mar', 'apr', 'jun', 'jul', 'aug', 'sep', 'sept', 'oct', 'nov', 'dec',
 ]);
 
-/** A capitalized phrase ending in one of these, or followed by a year, names a statute. */
-export const STATUTE_TAILS = new Set([
-  'act', 'acts', 'regulations', 'regulation', 'directive', 'directives', 'ordinance', 'statute',
-  'statutes', 'treaty', 'convention', 'constitution', 'bill', 'amendment',
-]);
-
 /**
  * A capitalized phrase with one of these anywhere names a legal instrument: "Protocol to Prevent,
  * Suppress and Punish Trafficking in Persons", "Trafficking Victims Protection Act". "Code" and

@@ -105,13 +105,13 @@ describe('analyze: used but never defined', () => {
     expect(only(result, 'undefined')).toEqual(['Tier 2 Support']);
   });
 
-  it('ignores headings, all-caps lines, short titles and table cells', () => {
+  it('ignores headings, all-caps lines and short titles', () => {
     const result = run([
       { text: 'Confidential Information', heading: true },
       'IN NO EVENT SHALL THE SUPPLIER BE LIABLE FOR CONSEQUENTIAL LOSS.',
       'Schedule of Fees',
-      { text: 'Termination Fee', inTable: true },
-      { text: 'Termination Fee', inTable: true },
+      'Termination Fee',
+      'Termination Fee',
       'THIS AGREEMENT is made on 1 May 2026 between the parties named below.',
     ]);
     expect(result.findings).toEqual([]);

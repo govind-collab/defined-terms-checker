@@ -266,6 +266,15 @@ describe('analyze: used before its inline definition', () => {
 });
 
 describe('analyze: lowercase uses', () => {
+  it('does not count the words an inline definition names as a lowercase use', () => {
+    const result = run([
+      '"Supplier" means Acme Limited.',
+      'The Supplier shall provide the services described in Schedule 1 (the "Services").',
+      'The Supplier shall perform the Services with reasonable skill and care.',
+    ]);
+    expect(result.findings).toEqual([]);
+  });
+
   it('reports a lowercase use of a defined term', () => {
     const result = run([...BASE, 'The confidential information shall be returned to the Party.']);
     expect(only(result, 'lowercase')).toEqual(['Confidential Information']);

@@ -216,10 +216,12 @@ function matchUses(scanned: Scanned[], terms: Map<string, DefinedTerm>): Uses {
   const familyUses = new Map<string, number>();
   for (const s of scanned) {
     s.matches = index.matchAll(s.text, s.tokens);
-    // Matches inside a definitions entry's own sentence ("Agreement" means this agreement) are not uses.
-    const entries = s.definitions
-      .filter((d) => d.form !== 'inline')
-      .map((d) => ({ key: d.key, start: d.start, end: sentenceEndAfter(s, d.end) }));
+    // Matches in a definition's own sentence are not uses: "Agreement" means this agreement, the services (the "Services").
+    const entries = s.definitions.map((d) =>
+      d.form === 'inline'
+        ? { key: d.key, start: sentenceStartBefore(s, d.start), end: d.end }
+        : { key: d.key, start: d.start, end: sentenceEndAfter(s, d.end) },
+    );
     const inOwnDefinition = (m: TermMatch): boolean =>
       entries.some((e) => e.key === m.key && m.start >= e.start && m.start < e.end) ||
       s.definitions.some((d) => d.key === m.key && m.start < d.end && m.end > d.start);
@@ -305,6 +307,15 @@ function runInHeadingSpans(text: string, tokens: Token[]): Array<[number, number
       spans.push([tokens[first].start, tokens[last].end]);
   }
   return spans;
+}
+
+function sentenceStartBefore(s: Scanned, pos: number): number {
+  let start = 0;
+  for (const t of s.tokens) {
+    if (t.start > pos) break;
+    if (t.sentenceStart) start = t.start;
+  }
+  return start;
 }
 
 // Ends at the next sentence start after ".", "!", "?" or a line break. A colon or a list marker continues it.

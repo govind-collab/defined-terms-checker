@@ -181,7 +181,9 @@ export function analyze(paragraphs: ParagraphInput[], options: AnalysisOptions |
     // "X" has the meaning given in clause 3 points at another definition rather than adding one, and
     // two definitions inside one paragraph are one drafting event, not a duplicate.
     const strong = defs.filter((d) => !d.weak && d.form !== 'reference');
-    const firstPerParagraph = [...new Map(strong.map((d) => [d.location.paragraph, d])).values()];
+    const firstPerParagraph = strong.filter(
+      (d, i) => i === 0 || d.location.paragraph !== strong[i - 1].location.paragraph,
+    );
     if (firstPerParagraph.length >= 2) {
       findings.push({
         kind: 'duplicate',

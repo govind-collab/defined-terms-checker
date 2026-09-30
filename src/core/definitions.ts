@@ -370,10 +370,10 @@ function acronymIntroduction(
   const letters = acronym.replace(/[^A-Za-z]/g, '').toUpperCase();
   if (letters.length < 2) return [];
   const run = runBefore(text, tokens, open);
+  const initials = (ts: Token[]): string => ts.map((t) => t.text[0].toUpperCase()).join('');
   for (let i = run.length - 1; i >= 0; i--) {
     const slice = run.slice(i);
     if (!slice[0].capital) continue;
-    const initials = (ts: Token[]): string => ts.map((t) => t.text[0].toUpperCase()).join('');
     if (initials(slice.filter((t) => t.capital)) !== letters && initials(slice) !== letters) continue;
     const out: DefinitionMatch[] = [
       {
@@ -463,14 +463,11 @@ export function findDefinitions(text: string, tokens: Token[], singleQuotes: boo
       start: span.termStart,
       end: span.termEnd,
     });
+    if (found.open === undefined) continue;
     // Statement of Work ("SOW"): the phrase in front of the bracket is the thing being named.
-    if (found.open !== undefined) {
-      const run = runBefore(text, tokens, found.open);
-      if (run.length > 0) {
-        const longForm = weakInline(text, run[0].start, run[run.length - 1].end);
-        if (longForm) definitions.push(longForm);
-      }
-    }
+    const run = runBefore(text, tokens, found.open);
+    const longForm = run.length > 0 ? weakInline(text, run[0].start, run[run.length - 1].end) : null;
+    if (longForm) definitions.push(longForm);
   }
   for (let i = 0; i < starts.length; i++) {
     const lineEnd = i + 1 < starts.length ? starts[i + 1] : text.length;

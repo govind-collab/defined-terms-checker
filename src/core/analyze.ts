@@ -80,48 +80,8 @@ export function analyze(paragraphs: ParagraphInput[], options: AnalysisOptions =
   const ignored = new Set((options.ignore ?? []).map((t) => familyKey(termKey(t))));
 
   const scanned = paragraphs.map((p, index) => scanParagraph(p, index, singleQuotes));
-
-  const terms = new Map<string, { term: string; definitions: Definition[] }>();
-  for (const s of scanned) {
-    for (const d of s.definitions) {
-      const entry = terms.get(d.key) ?? { term: d.term, definitions: [] };
-      entry.definitions.push({
-        term: d.term,
-        key: d.key,
-        form: d.form,
-        weak: d.weak,
-        location: locate(s, d.start, d.end),
-      });
-      terms.set(d.key, entry);
-    }
-  }
-
-  const index = new TermIndex([...terms].map(([key, e]) => ({ key, term: e.term })));
-  const uses = new Map<string, Location[]>();
-  const lowercase = new Map<string, Location[]>();
-  const familyUses = new Map<string, number>();
-  for (const s of scanned) {
-    s.matches = index.matchAll(s.text, s.tokens);
-    // The sentence of a definitions entry ("Agreement" means this agreement, "Affiliate" means an Affiliate
-    // of ...) names its term without using it, so matches inside it are skipped. Everything else in the
-    // paragraph, before or after, is a use: an inline definition sits in running text that goes on to use
-    // the term, and a "means" sentence can follow the term's first use in the same paragraph.
-    const entries = s.definitions
-      .filter((d) => d.form !== 'inline')
-      .map((d) => ({ key: d.key, start: d.start, end: sentenceEndAfter(s, d.end) }));
-    const inOwnDefinition = (m: TermMatch): boolean =>
-      entries.some((e) => e.key === m.key && m.start >= e.start && m.start < e.end) ||
-      s.definitions.some((d) => d.key === m.key && m.start < d.end && m.end > d.start);
-    for (const m of s.matches) {
-      if (inOwnDefinition(m)) continue;
-      const loc = locate(s, m.start, m.end);
-      push(uses, m.key, loc);
-      const family = familyKey(m.key);
-      familyUses.set(family, (familyUses.get(family) ?? 0) + 1);
-      // A 1-letter term ("A" means Schedule A) would flag every article, so the lowercase check skips it.
-      if (m.casing === 'lower' && !s.heading && m.term.length > 1) push(lowercase, m.key, loc);
-    }
-  }
+  const terms = collectDefinitions(scanned);
+  const { uses, lowercase, familyUses } = matchUses(scanned, terms);
 
   const midCaps = new Set<string>();
   for (const s of scanned) {
@@ -217,6 +177,65 @@ export function analyze(paragraphs: ParagraphInput[], options: AnalysisOptions =
     terms: summaries,
     stats: { paragraphs: paragraphs.length, terms: terms.size, ignored: findings.length - kept.length },
   };
+}
+
+interface TermEntry {
+  term: string;
+  definitions: Definition[];
+}
+
+function collectDefinitions(scanned: Scanned[]): Map<string, TermEntry> {
+  const terms = new Map<string, TermEntry>();
+  for (const s of scanned) {
+    for (const d of s.definitions) {
+      const entry = terms.get(d.key) ?? { term: d.term, definitions: [] };
+      entry.definitions.push({
+        term: d.term,
+        key: d.key,
+        form: d.form,
+        weak: d.weak,
+        location: locate(s, d.start, d.end),
+      });
+      terms.set(d.key, entry);
+    }
+  }
+  return terms;
+}
+
+interface Uses {
+  uses: Map<string, Location[]>;
+  lowercase: Map<string, Location[]>;
+  familyUses: Map<string, number>;
+}
+
+function matchUses(scanned: Scanned[], terms: Map<string, TermEntry>): Uses {
+  const index = new TermIndex([...terms].map(([key, e]) => ({ key, term: e.term })));
+  const uses = new Map<string, Location[]>();
+  const lowercase = new Map<string, Location[]>();
+  const familyUses = new Map<string, number>();
+  for (const s of scanned) {
+    s.matches = index.matchAll(s.text, s.tokens);
+    // The sentence of a definitions entry ("Agreement" means this agreement, "Affiliate" means an Affiliate
+    // of ...) names its term without using it, so matches inside it are skipped. Everything else in the
+    // paragraph, before or after, is a use: an inline definition sits in running text that goes on to use
+    // the term, and a "means" sentence can follow the term's first use in the same paragraph.
+    const entries = s.definitions
+      .filter((d) => d.form !== 'inline')
+      .map((d) => ({ key: d.key, start: d.start, end: sentenceEndAfter(s, d.end) }));
+    const inOwnDefinition = (m: TermMatch): boolean =>
+      entries.some((e) => e.key === m.key && m.start >= e.start && m.start < e.end) ||
+      s.definitions.some((d) => d.key === m.key && m.start < d.end && m.end > d.start);
+    for (const m of s.matches) {
+      if (inOwnDefinition(m)) continue;
+      const loc = locate(s, m.start, m.end);
+      push(uses, m.key, loc);
+      const family = familyKey(m.key);
+      familyUses.set(family, (familyUses.get(family) ?? 0) + 1);
+      // A 1-letter term ("A" means Schedule A) would flag every article, so the lowercase check skips it.
+      if (m.casing === 'lower' && !s.heading && m.term.length > 1) push(lowercase, m.key, loc);
+    }
+  }
+  return { uses, lowercase, familyUses };
 }
 
 function scanParagraph(p: ParagraphInput, index: number, singleQuotes: boolean): Scanned {
@@ -315,9 +334,6 @@ function collectCandidates(
   for (const m of s.matches) for (let i = m.first; i <= m.last; i++) covered[i] = 1;
 
   const usable = (i: number): boolean => i < tokens.length && !excluded[i] && tokens[i].capital;
-  // "Contractor's Authorized Representative": the possessive ends one phrase and the term is what follows.
-  const possessive = (i: number): boolean =>
-    /['’]s$/u.test(tokens[i].text) || /['’]/.test(text[tokens[i].end] ?? '');
   // "Board of Directors", "Tier 2 Support". A number after a cross-reference word ("Section 3") does not join.
   const joiner = (i: number): boolean =>
     !excluded[i] &&
@@ -325,34 +341,6 @@ function collectCandidates(
       (/^\p{N}+$/u.test(tokens[i].text) && !STRUCTURAL_WORDS.has(normalizeWord(tokens[i - 1].text)))) &&
     usable(i + 1) &&
     adjacent(text, tokens[i], tokens[i + 1]);
-  // "the Protocol to Prevent, Suppress and Punish Trafficking in Persons": one instrument name, many capitals.
-  const instrumentEarlier = (i: number): boolean => {
-    for (let k = i - 1, n = 0; k >= 0 && n < SENTENCE_LOOKBACK; k--, n++) {
-      if (INSTRUMENT_WORDS.has(normalizeWord(tokens[k].text))) return true;
-      if (tokens[k].sentenceStart) break;
-    }
-    return false;
-  };
-  // FAR 52.203-19 Prohibition on Requiring Certain Internal Confidentiality Agreements: a cited clause title.
-  const citationBefore = (i: number): boolean =>
-    tokens
-      .slice(Math.max(0, i - 3), i)
-      .some(
-        (t) =>
-          CITATION_WORDS.has(normalizeWord(t.text).replace(/\./g, '')) || CITATION_NUMBER_RE.test(t.text),
-      );
-  // "Section 5 – Tender Package": the title that follows a cross-reference.
-  const crossRefTitle = (i: number): boolean => {
-    const num = tokens[i - 1];
-    const word = tokens[i - 2];
-    return (
-      num !== undefined &&
-      word !== undefined &&
-      /^\p{N}/u.test(num.text) &&
-      STRUCTURAL_WORDS.has(normalizeWord(word.text)) &&
-      /^[\s–—:,-]+$/.test(text.slice(num.end, tokens[i].start))
-    );
-  };
 
   const emit = (ids: number[]): void => {
     let phrase = ids;
@@ -366,7 +354,7 @@ function collectCandidates(
 
     const last = phrase[phrase.length - 1];
     const next = tokens[last + 1];
-    if (crossRefTitle(phrase[0])) return;
+    if (crossRefTitle(text, tokens, phrase[0])) return;
 
     const words = phrase.map((k) => tokens[k].text);
     const lowers = words.map(normalizeWord);
@@ -377,7 +365,7 @@ function collectCandidates(
     if (STRUCTURAL_WORDS.has(lowers[0]) && words.length <= 2) return;
     if (lowers.some((w) => INSTRUMENT_WORDS.has(w))) return;
     if (next !== undefined && YEAR_RE.test(next.text) && adjacent(text, tokens[last], next)) return;
-    if (instrumentEarlier(phrase[0]) || citationBefore(phrase[0])) return;
+    if (instrumentEarlier(tokens, phrase[0]) || citationBefore(tokens, phrase[0])) return;
     if (isPlaceName(lowers) || isPublicBody(lowers)) return;
     // "100 Main Street": an address.
     if (words.length > 1 && STREET_TAILS.has(lowers[lowers.length - 1])) return;
@@ -418,7 +406,7 @@ function collectCandidates(
     let j = i + 1;
     while (
       j < tokens.length &&
-      !possessive(run[run.length - 1]) &&
+      !possessive(text, tokens[run[run.length - 1]]) &&
       adjacent(text, tokens[j - 1], tokens[j])
     ) {
       if (usable(j)) {
@@ -434,6 +422,42 @@ function collectCandidates(
     i = j;
     for (const phrase of splitRun(run, tokens, covered)) emit(phrase);
   }
+}
+
+// "Contractor's Authorized Representative": the possessive ends one phrase and the term is what follows.
+function possessive(text: string, t: Token): boolean {
+  return /['’]s$/u.test(t.text) || /['’]/.test(text[t.end] ?? '');
+}
+
+// "the Protocol to Prevent, Suppress and Punish Trafficking in Persons": one instrument name, many capitals.
+function instrumentEarlier(tokens: Token[], i: number): boolean {
+  for (let k = i - 1, n = 0; k >= 0 && n < SENTENCE_LOOKBACK; k--, n++) {
+    if (INSTRUMENT_WORDS.has(normalizeWord(tokens[k].text))) return true;
+    if (tokens[k].sentenceStart) break;
+  }
+  return false;
+}
+
+// FAR 52.203-19 Prohibition on Requiring Certain Internal Confidentiality Agreements: a cited clause title.
+function citationBefore(tokens: Token[], i: number): boolean {
+  return tokens
+    .slice(Math.max(0, i - 3), i)
+    .some(
+      (t) => CITATION_WORDS.has(normalizeWord(t.text).replace(/\./g, '')) || CITATION_NUMBER_RE.test(t.text),
+    );
+}
+
+// "Section 5 – Tender Package": the title that follows a cross-reference.
+function crossRefTitle(text: string, tokens: Token[], i: number): boolean {
+  const num = tokens[i - 1];
+  const word = tokens[i - 2];
+  return (
+    num !== undefined &&
+    word !== undefined &&
+    /^\p{N}/u.test(num.text) &&
+    STRUCTURAL_WORDS.has(normalizeWord(word.text)) &&
+    /^[\s–—:,-]+$/.test(text.slice(num.end, tokens[i].start))
+  );
 }
 
 /**

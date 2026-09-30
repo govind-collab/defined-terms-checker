@@ -66,7 +66,7 @@ describe('analyze: used but never defined', () => {
   });
 
   it('needs two uses for a single word but one for a phrase', () => {
-    const result = run([...BASE, 'The Party shall pay Wilmington the Termination Fee.']);
+    const result = run([...BASE, 'The Party shall pay Northwind the Termination Fee.']);
     expect(only(result, 'undefined')).toEqual(['Termination Fee']);
   });
 

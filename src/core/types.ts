@@ -15,7 +15,6 @@ export interface Location {
   text: string;
   /** How many earlier occurrences of `text` the same paragraph has. */
   ordinal: number;
-  /** A short snippet around the match, for display. */
   context: string;
 }
 

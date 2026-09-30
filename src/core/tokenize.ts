@@ -21,7 +21,6 @@ const INLINE_MARKER_RE = /(^|\s)(\((?:\d{1,3}|[A-Za-z]|[ivxlc]{1,6}|[IVXLC]{1,6}
 const LINE_BREAK_RE = /[\n\r\v]/g;
 const SENTENCE_BREAK_RE = /[.!?:…\n\r\v•]/;
 
-/** Offsets at which a new line starts: 0 and the position after each line break. */
 export function lineStarts(text: string): number[] {
   const starts = [0];
   for (const m of text.matchAll(LINE_BREAK_RE)) starts.push(m.index + 1);

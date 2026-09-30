@@ -178,13 +178,13 @@ export function analyze(paragraphs: ParagraphInput[], options: AnalysisOptions =
   };
 }
 
-interface TermEntry {
+interface DefinedTerm {
   term: string;
   definitions: Definition[];
 }
 
-function collectDefinitions(scanned: Scanned[]): Map<string, TermEntry> {
-  const terms = new Map<string, TermEntry>();
+function collectDefinitions(scanned: Scanned[]): Map<string, DefinedTerm> {
+  const terms = new Map<string, DefinedTerm>();
   for (const s of scanned) {
     for (const d of s.definitions) {
       const entry = terms.get(d.key) ?? { term: d.term, definitions: [] };
@@ -207,7 +207,7 @@ interface Uses {
   familyUses: Map<string, number>;
 }
 
-function matchUses(scanned: Scanned[], terms: Map<string, TermEntry>): Uses {
+function matchUses(scanned: Scanned[], terms: Map<string, DefinedTerm>): Uses {
   const index = new TermIndex([...terms].map(([key, e]) => ({ key, term: e.term })));
   const uses = new Map<string, Location[]>();
   const lowercase = new Map<string, Location[]>();
@@ -358,7 +358,6 @@ function collectCandidates(
     if (next !== undefined && YEAR_RE.test(next.text) && adjacent(text, tokens[last], next)) return;
     if (instrumentEarlier(tokens, phrase[0]) || citationBefore(tokens, phrase[0])) return;
     if (isPlaceName(lowers) || isPublicBody(lowers)) return;
-    // "100 Main Street": an address.
     if (words.length > 1 && STREET_TAILS.has(lowers[lowers.length - 1])) return;
     // "Mercy Corps Nigeria": a defined name plus a place.
     const uncovered = phrase.filter((k) => !covered[k]);

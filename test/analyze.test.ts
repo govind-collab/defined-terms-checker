@@ -127,6 +127,11 @@ describe('analyze: used but never defined', () => {
     expect(result.findings).toEqual([]);
   });
 
+  it('reports a phrase after a statute once the sentence ends', () => {
+    const result = run(['The Companies Act 2006 applies. The Board of Directors meets monthly.']);
+    expect(only(result, 'undefined')).toEqual(['Board of Directors']);
+  });
+
   it('reports an undefined acronym but not common ones', () => {
     const result = run([
       'The SOW lists the work. Each SOW is signed. The price is in USD and the company is an LLC in the USA.',

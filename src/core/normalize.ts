@@ -15,7 +15,6 @@ export function isWordChar(ch: string | undefined): boolean {
   return ch !== undefined && /[\p{L}\p{N}]/u.test(ch);
 }
 
-/** Drops a possessive ending: Company's -> Company, Parties' -> Parties. */
 export function stripPossessive(word: string): string {
   return word.replace(/['’]s$|['’]$/u, '');
 }

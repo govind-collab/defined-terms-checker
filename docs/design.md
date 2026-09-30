@@ -10,8 +10,9 @@ src/office     Word.run, search, select, storage depends on core types only
 src/core       pure functions: paragraphs in, findings out   no Office anywhere
 ```
 
-The core holds the rules, and its tests run in Node in about a second. The Office layer is `readDocument`,
-`selectLocation` and an error mapper. The pane is plain DOM code with a small `el()` helper and no framework.
+The core holds the rules, and its tests run in Node in about a second. The Office layer reads the paragraphs,
+selects a finding, reports the API version and maps Office errors, and the ignore list lives beside it in
+`storage.ts`. The pane is plain DOM code with a small `el()` helper and no framework.
 
 Data flow for one check:
 
@@ -93,26 +94,28 @@ singularizer applied to both sides, so it only has to map "Parties" and "Party" 
 
 At each position the longest term wins, and among terms of the same length an exact form beats a plural
 fudge. That is what makes "third party" a lowercase use of "Third Party" rather than of "Party", and what
-keeps "Terms" (terms and conditions) apart from "Term" (duration) when both are defined.
+keeps "Terms" (terms and conditions) apart from "Term" (duration) when both are defined. That holds for
+matching. The unused check still treats a singular and its plural as one family, so a "Term" that is defined
+but only ever used as "Terms" is not reported.
 
-A term inside the sentence that defines it is part of the definition, not a use. `"Agreement" means this
+A term inside the sentence that defines it counts as part of the definition. `"Agreement" means this
 agreement` is normal drafting (Weagree's rule against circular definitions says in terms that it does not
 apply to the non-capitalised term inside the definition); `"Affiliate" means an Affiliate of a Party`
 should still be reported as unused if nothing else refers to it. The window is the
-definition's sentence, not its paragraph: an indemnity clause that says `(each an "Indemnitee")` and then
+definition's sentence: an indemnity clause that says `(each an "Indemnitee")` and then
 uses "Indemnitee" 3 more times in the same paragraph has 3 uses, and a `"Moral Rights" means ...` sentence
 that follows the term's first use in the same paragraph does not cancel that use. Singular and plural are
 one family for the unused check, so `(each a "Party" and together the "Parties")` followed by uses of
 "Parties" alone leaves "Party" off the unused list. Two definitions inside one paragraph count as one
-drafting event, not a duplicate.
+drafting event.
 
 ## Undefined terms: precision over recall
 
 This is the one check that guesses at intent. The ContractScrub benchmark (arXiv 2608.20204, August 2026)
 reports 0.51 recall on its "undefined capitalized terms" category for its best model, against 0.87 to 0.94
 for the same model on the unused, uncapitalized and defined-term categories, and no model it tested passed
-0.55 on undefined terms. Every product in this space ships an ignore list because of it, so the rules below
-drop a candidate whenever there is doubt.
+0.55 on undefined terms. Products in this space ship an ignore list for the same reason. The rules below drop
+a candidate whenever there is doubt.
 
 - A run is consecutive capitalized words separated by whitespace only. "of", "for", "in", "on", "&" and
   numbers join words ("Board of Directors", "Tier 2 Support"); "and" and "or" do not, because "Buyer and
@@ -140,7 +143,8 @@ drop a candidate whenever there is doubt.
   geographic initialisms in front of a phrase ("U.S. Government", "EU Sanctions List"), months and weekdays,
   honorifics, common acronyms compared without their dots ("U.S.", "U.S.A."), street addresses, clause
   titles in brackets after a cross-reference (`Clause 32.8(c) (Payments by the Supplier)`), a defined name
-  followed by a place ("Mercy Corps Nigeria"), and the document's own title.
+  followed by a place ("Mercy Corps Nigeria"), and the text of any heading or all-caps paragraph, the
+  document's own title included, wherever that phrase appears.
 - A single word must appear twice, a phrase once. Adams says not to define a term that is used only once,
   and the reverse holds too: a capitalized word used once is usually a name.
 - A run longer than 8 words, the same limit a defined term has, is a title or a list and produces nothing.
@@ -174,15 +178,16 @@ what the ignore list is for, and the pane says so under the heading.
   add-in searches the whole body. A single hit is selected and reported as moved, otherwise the paragraph
   is selected, and if even that is gone the pane says to run the check again.
 - XML add-in-only manifest. The unified manifest now supports Word on Windows, but only on subscription
-  builds, and it cannot be sideloaded from a network share. The XML manifest works on subscription and
-  perpetual Word, on Mac and on the web, and it is the one a colleague can drop into a shared folder.
+  builds, and it cannot be sideloaded from a network share. The XML manifest works on subscription Word, on
+  perpetual Word 2021 and later, on Mac and on the web, and it is the one a colleague can drop into a shared
+  folder.
 - `Office.onReady` rather than `Office.initialize`, plus a check that office.js loaded at all and a host
   check, so the pane says something sensible if the CDN was unreachable or it is opened outside Word.
   Office errors are mapped to a short message and the `debugInfo` goes to the console.
 
 ## Sentences the rules were tested against
 
-Real drafting, mostly from SEC filings, Law Insider and drafting guides, each one a test:
+Real drafting, mostly from SEC filings, Law Insider and drafting guides, most of them tests in `test/`:
 
 | Sentence                                                                                        | Expected                                                       |
 | ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
@@ -198,12 +203,12 @@ Real drafting, mostly from SEC filings, Law Insider and drafting guides, each on
 | `"Excluded Assets" means the assets in Schedule 4, but does not include the Retained Cash`      | defines; "Retained Cash" is a use                              |
 | `A Party may not disclose to any third party, and a Third Party has no rights`                  | one lowercase use of "Third Party", none of "Party"            |
 | `IN NO EVENT SHALL SELLER BE LIABLE FOR CONSEQUENTIAL DAMAGES`                                  | nothing                                                        |
-| `the Companies Act 2006 and the Board of Directors`                                             | "Board of Directors" is a candidate; the statute is not        |
+| `The Companies Act 2006 applies. The Board of Directors meets monthly.`                         | "Board of Directors" is a candidate; the statute is not        |
 | `The Company shall deliver the Products by the Delivery Date`                                   | 3 uses; "The" does not join "Company"                          |
 | `Acme Holdings Inc. and Beta GmbH agree. Mr Smith signs.`                                       | nothing                                                        |
 | `Name: Jane Doe` / `Date: 1 May 2026 at the offices of Acme`                                    | nothing: labels, not colon definitions                         |
 
-The full set is in `test/`, and `test/fixtures/sample-nda.txt` is a short agreement with 6 planted
+The rest of the suite is in `test/`, and `test/fixtures/sample-nda.txt` is a short agreement with 6 planted
 problems that the end-to-end test checks are the only 6 reported.
 
 ## What I would add next

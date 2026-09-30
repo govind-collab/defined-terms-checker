@@ -55,7 +55,7 @@ the reasons for them are in [docs/design.md](docs/design.md).
 
 ## Commands
 
-`npm test` (98 tests), `npm run lint`, `npm run typecheck`, `npm run build` (about 37 KB of JavaScript in
+`npm test` (100 tests), `npm run lint`, `npm run typecheck`, `npm run build` (about 37 KB of JavaScript in
 `dist/`), `npm run validate` (the manifest), `npm start` and `npm run stop`. To host the add-in somewhere
 other than localhost, set `ADDIN_URL` for the build: `ADDIN_URL=https://example.com/terms/ npm run build`
 rewrites the URLs in `dist/manifest.xml`.

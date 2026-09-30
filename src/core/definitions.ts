@@ -239,7 +239,7 @@ function classifyQuoted(
   return null;
 }
 
-/** "Working Day means ..." / "Tier 1 Support: ..." with no quotes at all, at the start of a line. */
+// "Working Day means ..." / "Tier 1 Support: ..." with no quotes at all, at the start of a line.
 function unquotedLineInitial(
   text: string,
   tokens: Token[],
@@ -323,7 +323,7 @@ function plausibleUnquotedTerm(term: string): boolean {
   return !isPlaceName(lowers);
 }
 
-/** The capitalized phrase that ends right in front of an opening bracket: "Statement of Work" in "Statement of Work (SOW)". */
+// The capitalized phrase that ends right in front of an opening bracket: "Statement of Work" in "Statement of Work (SOW)".
 function runBefore(text: string, tokens: Token[], open: number): Token[] {
   let last = -1;
   for (let k = 0; k < tokens.length && tokens[k].end <= open; k++) last = k;
@@ -345,7 +345,7 @@ function weakInline(text: string, start: number, end: number): DefinitionMatch |
   return { ...parsed, form: 'inline', weak: true, start, end };
 }
 
-/** Statement of Work (SOW): the acronym, and the long form in front of it, when the initials agree. */
+// Statement of Work (SOW): the acronym, and the long form in front of it, when the initials agree.
 function acronymIntroduction(
   text: string,
   tokens: Token[],

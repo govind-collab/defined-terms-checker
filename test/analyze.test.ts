@@ -270,6 +270,14 @@ describe('analyze: lowercase uses', () => {
     );
   });
 
+  it('matches a term written with an ampersand', () => {
+    const result = run([
+      '"Terms & Conditions" means the standard terms.',
+      'The Customer accepts the Terms & Conditions. The Terms & Conditions prevail.',
+    ]);
+    expect(result.findings).toEqual([]);
+  });
+
   it('matches the longest defined term first', () => {
     const result = run([
       '"Party" means a party to this agreement. "Third Party" means anyone else.',

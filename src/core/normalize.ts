@@ -1,6 +1,7 @@
 // A word may carry combining marks and format characters (soft hyphens, zero-width spaces).
+// "&" is a word of its own, so "Terms & Conditions" tokenizes the way parseTerm reads it.
 export const WORD_RE =
-  /[\p{L}\p{N}][\p{L}\p{N}\p{M}\p{Cf}]*(?:['’.-][\p{L}\p{N}][\p{L}\p{N}\p{M}\p{Cf}]*)*/gu;
+  /[\p{L}\p{N}][\p{L}\p{N}\p{M}\p{Cf}]*(?:['’.-][\p{L}\p{N}][\p{L}\p{N}\p{M}\p{Cf}]*)*|&/gu;
 
 export function isCapital(word: string): boolean {
   return /^\p{Lu}/u.test(word);

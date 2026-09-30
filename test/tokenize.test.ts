@@ -27,6 +27,10 @@ describe('tokenize', () => {
     expect(texts('Seller’s rights')).toEqual(['Seller’s', 'rights']);
   });
 
+  it('keeps an ampersand as a word', () => {
+    expect(texts('Terms & Conditions')).toEqual(['Terms', '&', 'Conditions']);
+  });
+
   it('leaves a trailing plural apostrophe out of the word', () => {
     expect(texts("the Parties' rights")).toEqual(['the', 'Parties', 'rights']);
   });

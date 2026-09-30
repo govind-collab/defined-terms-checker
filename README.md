@@ -5,6 +5,8 @@ defined, defined but never used, defined twice, used before the parenthetical th
 written in lowercase. It does not change the document and nothing leaves Word. The analysis runs in the
 task pane on the text the Word API hands over.
 
+![The task pane after a check](docs/pane.png)
+
 The rules come from how contracts are actually drafted (Adams' _A Manual of Style for Contract Drafting_,
 UK and US precedents) and from the false positives that make tools of this kind tiring to use:
 sentence-initial capitals, headings, party names, "Section 3", "the State of Delaware", all-caps clauses.

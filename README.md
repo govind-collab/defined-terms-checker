@@ -6,16 +6,16 @@ written in lowercase. It does not change the document and nothing leaves Word.
 
 ![The task pane after a check](docs/pane.png)
 
-The rules follow Adams' _A Manual of Style for Contract Drafting_ and skip the usual false positives: the
+The rules follow standard drafting guidance and skip the usual false positives: the
 first word of a sentence, headings, party names, "Section 3", "the State of Delaware" and all-caps clauses.
 
 ## What it finds
 
 | Finding                           | What it means                                                                                                                        | In `samples/sample-nda.docx`                |
 | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------- |
-| Used but never defined            | A capitalized term with no definition anywhere. A single word needs 2 uses, a phrase 1.                                              | "Project" (3 uses) and "Steering Committee" |
+| Used but never defined            | A capitalized term with no definition anywhere. A single word must appear twice, a phrase once.                                      | "Project" (3 uses) and "Steering Committee" |
 | Defined but never used            | A definition nothing refers to, usually left behind when a clause was deleted or pasted in from another document                     | "Business Day"                              |
-| Defined more than once            | 2 full definitions of one term. Cross-references ("has the meaning given in clause 3") and "includes" do not count                   | "Survival Period"                           |
+| Defined more than once            | Two full definitions of one term. Cross-references ("has the meaning given in clause 3") and "includes" do not count                 | "Survival Period"                           |
 | Used before its inline definition | Used earlier than the parenthetical that defines it                                                                                  | "Compelled Disclosure"                      |
 | Lowercase uses                    | The words of a defined term without their capitals. Not reported inside the term's own definition ("Agreement" means this agreement) | "representatives"                           |
 
@@ -55,7 +55,7 @@ the reasons for them are in [docs/design.md](docs/design.md).
 
 ## Commands
 
-`npm test` (100 tests), `npm run lint`, `npm run typecheck`, `npm run build` (about 37 KB of JavaScript in
+`npm test` (106 tests), `npm run lint`, `npm run typecheck`, `npm run build` (about 37 KB of JavaScript in
 `dist/`), `npm run validate` (the manifest), `npm start` and `npm run stop`. To host the add-in somewhere
 other than localhost, set `ADDIN_URL` for the build: `ADDIN_URL=https://example.com/terms/ npm run build`
 rewrites the URLs in `dist/manifest.xml`.

@@ -119,7 +119,7 @@ a candidate whenever there is doubt.
 
 - A run is consecutive capitalized words separated by whitespace only. "of", "for", "in", "on", "&" and
   numbers join words ("Board of Directors", "Tier 2 Support"); "and" and "or" do not, because "Buyer and
-  Seller" is 2 terms far more often than 1.
+  Seller" is two terms far more often than one.
 - A run is split at the defined terms inside it. "Board of Directors of the Company" gives the candidate
   "Board of Directors" and leaves "Company" as a use. "Support Services" with only "Services" defined is
   reported whole, because the longer phrase is the likelier term.
@@ -172,8 +172,10 @@ what the ignore list is for, and the pane says so under the heading.
   many earlier occurrences of that substring the paragraph has. Selecting it loads the paragraph list
   through one cheap scalar (any loaded property populates `items`), searches inside that paragraph with
   `matchCase`, and takes the n-th hit. Word's search finds non-overlapping occurrences, and so does the
-  `indexOf` loop that computed the ordinal, so the two agree. `^` is escaped and strings over 255 characters
-  are refused, per the search API's limits.
+  `indexOf` loop that computed the ordinal. The ordinal was counted on the clean text, though, and the
+  search runs on the live paragraph, so an earlier copy of the same words inside a tracked deletion or
+  hidden text would put the selection one hit off. `^` is escaped and strings over 255 characters are
+  refused, per the search API's limits.
 - Documents change between the check and the click. If the paragraph no longer has that occurrence, the
   add-in searches the whole body. A single hit is selected and reported as moved, otherwise the paragraph
   is selected, and if even that is gone the pane says to run the check again.

@@ -31,6 +31,13 @@ describe('tokenize', () => {
     expect(texts("the Parties' rights")).toEqual(['the', 'Parties', 'rights']);
   });
 
+  it('does not start a sentence at a period before a lowercase word', () => {
+    expect(starts('Payment is in U.S. dollars. Acme Inc. controls it, e.g. wholly.')).toEqual([
+      'Payment',
+      'Acme',
+    ]);
+  });
+
   it('marks the first word of each sentence', () => {
     expect(starts('The Company pays. Then the Supplier delivers! Does it? Yes: it does.')).toEqual([
       'The',

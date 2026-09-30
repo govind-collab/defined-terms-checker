@@ -177,6 +177,16 @@ describe('analyze: defined but never used', () => {
     ]);
     expect(only(result, 'unused')).toEqual(['Affiliate']);
   });
+
+  it('keeps the definition sentence open across an abbreviation', () => {
+    const result = run([
+      '"Dollars" means U.S. dollars.',
+      '"Affiliate" means, as to Acme Inc., any Affiliate of Acme Inc. controlled by it.',
+      'All Dollars are paid on the Effective Date.',
+      '"Effective Date" means 1 May 2026.',
+    ]);
+    expect(only(result, 'unused')).toEqual(['Affiliate']);
+  });
 });
 
 describe('analyze: defined more than once', () => {

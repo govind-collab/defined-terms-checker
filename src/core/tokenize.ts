@@ -19,7 +19,7 @@ const LINE_MARKER_RE =
 // "(a)", "(ii)", "(1)" between words.
 const INLINE_MARKER_RE = /(^|\s)(\((?:\d{1,3}|[A-Za-z]|[ivxlc]{1,6}|[IVXLC]{1,6})\))(?=\s)/gu;
 const LINE_BREAK_RE = /[\n\r\v]/g;
-const SENTENCE_BREAK_RE = /[.!?:…\n\r\v•]/;
+const SENTENCE_BREAK_RE = /[!?:…\n\r\v•]/;
 
 export function lineStarts(text: string): number[] {
   const starts = [0];
@@ -58,10 +58,13 @@ export function tokenize(text: string): Token[] {
     const marker = markers.some(([a, b]) => start >= a && end <= b);
     let sentenceStart = false;
     if (!marker) {
+      const gap = text.slice(prevEnd, start);
+      // "U.S. dollars", "Acme Inc. controlled by it": a period before a lowercase word ends no sentence
       sentenceStart =
         prevEnd < 0 ||
         markers.some(([a]) => a >= prevEnd && a < start) ||
-        SENTENCE_BREAK_RE.test(text.slice(prevEnd, start));
+        SENTENCE_BREAK_RE.test(gap) ||
+        (gap.includes('.') && !/^\p{Ll}/u.test(m[0]));
       prevEnd = end;
     }
     tokens.push({

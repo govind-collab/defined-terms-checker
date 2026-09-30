@@ -10,14 +10,13 @@ src/office     Word.run, search, select, storage depends on core types only
 src/core       pure functions: paragraphs in, findings out   no Office anywhere
 ```
 
-The core is where the difficult decisions live, and it runs in Node in about a second under Vitest. The
-Office layer is 2 functions and an error mapper, short enough to read in one sitting. The pane is plain DOM
-code with a small `el()` helper; a framework would be more code than the whole pane.
+The core holds the rules, and its tests run in Node in about a second. The Office layer is `readDocument`,
+`selectLocation` and an error mapper. The pane is plain DOM code with a small `el()` helper and no framework.
 
 Data flow for one check:
 
 ```
-Word.run  ->  paragraphs (text, style, table level)  ->  clean text per paragraph
+Word.run  ->  paragraphs (text, style)  ->  clean text per paragraph
           ->  analyze(paragraphs, options)
                 tokenize            words, offsets, sentence starts, list markers
                 findDefinitions     quoted and unquoted definition shapes
@@ -29,10 +28,9 @@ Word.run  ->  paragraphs (text, style, table level)  ->  clean text per paragrap
 
 ## Read-only, on purpose
 
-The obvious interface is to highlight problems in the document. The commercial tools do that: Litera
-Contract Companion underlines issues in the text and DealProof ships a "Clean" command to remove its
-markings afterwards. The cost shows up when track changes is on. Every highlight is a formatting change in
-the redline the other side receives, and a "Clean" pass that misses one leaves a mark in a signed document.
+Litera Contract Companion underlines issues in the text and Deal Proof has a "Clean" command to remove its
+marks. With track changes on, every mark is a formatting change in the redline the other side gets, and a
+missed one stays in the signed copy.
 
 So this add-in selects text and writes nothing. The ignore list follows the same rule: `Office.context.document.settings`
 would be the idiomatic place, but settings are saved into the `.docx`, so the list lives in the task pane's
@@ -65,7 +63,7 @@ The shapes, in the order they are tested:
 | inline    | `Acme Corp. (the "Company")`, `referred to as the "Parties"`      | Inside brackets or after a lead-in phrase.                                               |
 | brackets  | `(the Products)`, `Acme Inc. (Vendor)`, `Statement of Work (SOW)` | No quotes at all. Weak: defined, but never a duplicate and never reported unused.        |
 
-Two terms in one breath, `"X" and "Y" mean`, are both read. Inside brackets, the text before the quote
+`"X" and "Y" mean` defines both. Inside brackets, the text before the quote
 decides: `(the`, `(each a`, `(collectively,` say definition; `(as defined in the`, `(including the`,
 `(within the meaning of the` say reference. The capitalized phrase in front of a bracketed definition is
 the thing being named, so `Statement of Work ("SOW")` also records "Statement of Work" (weak) instead of
@@ -90,9 +88,8 @@ Matching is aligned to whole tokens, so "Sub-Licensee" is not a use of "Licensee
 not "Tier 1 Support". Words are compared through `normalizeWord` (case, curly apostrophes, possessives,
 trailing periods, accent composition, and invisible format characters such as soft hyphens and zero-width
 spaces, which Word and pasted text leave inside words) and, on the last word only, through a small
-singularizer that is applied to both sides.
-The singularizer does not need to know English; it needs to give the same answer for both "Parties" and
-"Party", and to leave "Business" and "Basis" alone.
+singularizer applied to both sides, so it only has to map "Parties" and "Party" to the same key and leave
+"Business" and "Basis" alone.
 
 At each position the longest term wins, and among terms of the same length an exact form beats a plural
 fudge. That is what makes "third party" a lowercase use of "Third Party" rather than of "Party", and what
@@ -111,12 +108,11 @@ drafting event, not a duplicate.
 
 ## Undefined terms: precision over recall
 
-This is the one heuristic check. Whether a capitalized phrase was _meant_ as a defined term is a question
-about intent. The ContractScrub benchmark (arXiv 2608.20204, August 2026) reports 0.51 recall on its
-"undefined capitalized terms" category for its best model overall, against 0.87 to 0.94 for the same model
-on the unused, uncapitalized and defined-term categories, and no model it tested passed 0.55 on undefined
-terms. Every product in this space ships an ignore list because of it. The choice here is to report less and
-be right more often.
+This is the one check that guesses at intent. The ContractScrub benchmark (arXiv 2608.20204, August 2026)
+reports 0.51 recall on its "undefined capitalized terms" category for its best model, against 0.87 to 0.94
+for the same model on the unused, uncapitalized and defined-term categories, and no model it tested passed
+0.55 on undefined terms. Every product in this space ships an ignore list because of it, so the rules below
+drop a candidate whenever there is doubt.
 
 - A run is consecutive capitalized words separated by whitespace only. "of", "for", "in", "on", "&" and
   numbers join words ("Board of Directors", "Tier 2 Support"); "and" and "or" do not, because "Buyer and
@@ -145,13 +141,13 @@ be right more often.
   honorifics, common acronyms compared without their dots ("U.S.", "U.S.A."), street addresses, clause
   titles in brackets after a cross-reference (`Clause 32.8(c) (Payments by the Supplier)`), a defined name
   followed by a place ("Mercy Corps Nigeria"), and the document's own title.
-- A single word must appear twice; a phrase once. Adams' rule that "there is no reason to define a term
-  that is used only once" cuts the other way too: a capitalized word used once is usually a name.
+- A single word must appear twice, a phrase once. Adams says not to define a term that is used only once,
+  and the reverse holds too: a capitalized word used once is usually a name.
 - A run longer than 8 words, the same limit a defined term has, is a title or a list and produces nothing.
   This is also what keeps a pathological paragraph (thousands of capitalized words in a row) from taking
   minutes: every per-phrase check is bounded by the longest entry in its word list.
 
-The first run on a real contract, a 166-paragraph government-funded service agreement, produced 55
+The first run on a real contract, a public 166-paragraph government-funded service agreement, produced 55
 undefined-term findings; the rules above brought it to 19, of which "Services", "Vendor", "Parties",
 "SOW", "Agreement" and "Donor Terms" are real gaps in that document. The rest of that run's noise
 (relatives in a per-diem table, a cover-page label with a value on the same line) is what the ignore list
@@ -162,27 +158,27 @@ what the ignore list is for, and the pane says so under the heading.
 
 ## Word API choices
 
-- **2 round trips to read.** One `load` for `text`, `styleBuiltIn` and `tableNestingLevel` across the
-  whole body, then one batch of per-paragraph calls for clean text. `Paragraph.text` is not documented
-  either way on tracked deletions, so the clean text is asked for explicitly: `getText()` on WordApi 1.7
-  leaves out hidden text and tracked deletions, `getReviewedText(current)` on 1.4 to 1.6 leaves out
-  deletions, and below that the raw text is used and the pane says so. The manifest asks for 1.3 and the
-  rest is feature-detected with `isSetSupported`.
-- **Navigation by paragraph and ordinal.** A finding stores the paragraph index, the exact substring and
-  how many earlier occurrences of that substring the paragraph has. Selecting it loads the paragraph list
+- 2 round trips to read. One `load` for `text` and `styleBuiltIn` across the whole body, then one batch of
+  per-paragraph calls for clean text. `Paragraph.text` is not documented either way on tracked deletions,
+  so the clean text is asked for explicitly: `getText()` on WordApi 1.7 leaves out hidden text and tracked
+  deletions, `getReviewedText(current)` on 1.4 to 1.6 leaves out deletions, and below that the raw text is
+  used and the pane says so. The manifest asks for 1.3 and the rest is feature-detected with
+  `isSetSupported`.
+- Navigation by paragraph and ordinal. A finding stores the paragraph index, the exact substring and how
+  many earlier occurrences of that substring the paragraph has. Selecting it loads the paragraph list
   through one cheap scalar (any loaded property populates `items`), searches inside that paragraph with
   `matchCase`, and takes the n-th hit. Word's search finds non-overlapping occurrences, and so does the
   `indexOf` loop that computed the ordinal, so the two agree. `^` is escaped and strings over 255 characters
   are refused, per the search API's limits.
-- **Documents change between the check and the click.** If the paragraph no longer has that occurrence,
-  the add-in searches the whole body; a single hit is selected and reported as moved, otherwise the
-  paragraph is selected, and if even that is gone the pane says to run the check again.
-- **XML add-in-only manifest.** The unified manifest now supports Word on Windows, but only on subscription
+- Documents change between the check and the click. If the paragraph no longer has that occurrence, the
+  add-in searches the whole body. A single hit is selected and reported as moved, otherwise the paragraph
+  is selected, and if even that is gone the pane says to run the check again.
+- XML add-in-only manifest. The unified manifest now supports Word on Windows, but only on subscription
   builds, and it cannot be sideloaded from a network share. The XML manifest works on subscription and
   perpetual Word, on Mac and on the web, and it is the one a colleague can drop into a shared folder.
-- **`Office.onReady`, not `Office.initialize`,** a check that office.js loaded at all, and a host check, so
-  the pane says something sensible if the CDN was unreachable or it is opened outside Word. Office errors are mapped to a short message; the `debugInfo` goes to the
-  console.
+- `Office.onReady` rather than `Office.initialize`, plus a check that office.js loaded at all and a host
+  check, so the pane says something sensible if the CDN was unreachable or it is opened outside Word.
+  Office errors are mapped to a short message and the `debugInfo` goes to the console.
 
 ## Sentences the rules were tested against
 

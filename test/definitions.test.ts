@@ -117,6 +117,15 @@ describe('findDefinitions: definitions-section forms', () => {
     expect(defs('"Fee" has the meaning specified in Schedule 1.')).toEqual([['Fee', 'reference', false]]);
   });
 
+  it('allows an aside without commas between the term and means', () => {
+    expect(
+      defs('"Affiliate" of any specified Person means any other Person that controls that Person.'),
+    ).toEqual([['Affiliate', 'means', false]]);
+    expect(defs('"Losses" as used in this Section 9 means all losses and costs.')).toEqual([
+      ['Losses', 'means', false],
+    ]);
+  });
+
   it('finds the colon and list forms', () => {
     expect(defs('"Business Day": a day other than a Saturday.')).toEqual([['Business Day', 'list', false]]);
     expect(defs('1.1 "Agreement": this agreement.')).toEqual([['Agreement', 'list', false]]);

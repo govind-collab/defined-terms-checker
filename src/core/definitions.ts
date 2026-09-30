@@ -60,8 +60,8 @@ const MAX_TERM_WORDS = 8;
 const TERM_WORD_RE =
   /^(?:[\p{L}\p{N}][\p{L}\p{N}\p{M}\p{Cf}]*(?:['’.-][\p{L}\p{N}][\p{L}\p{N}\p{M}\p{Cf}]*)*|&)$/u;
 
-// What may sit between the term and its trigger: ", in relation to a person," and "shall collectively".
-const LEAD = String.raw`^(?:\s*,[^,.;:\n]{0,80},)?\s*(?:(?:shall|will|may)\s+)?(?:(?:collectively|individually|respectively|each|together|generally|hereinafter|herein)\s+)?`;
+// What may sit between the term and its trigger: ", in relation to a person,", "of any specified Person", "shall collectively".
+const LEAD = String.raw`^(?:\s*,[^,.;:\n]{0,80},|\s+(?:of|in|as|with|for|under)\b[^,.;:\n"“”]{0,60}?)?\s*(?:(?:shall|will|may)\s+)?(?:(?:collectively|individually|respectively|each|together|generally|hereinafter|herein)\s+)?`;
 const REFERENCE_RE = new RegExp(
   LEAD +
     String.raw`(?:(?:has|have|bears?)\s+the\s+(?:respective\s+)?(?:same\s+)?meanings?\s+(?:given|set\s+(?:out|forth)|ascribed|assigned|specified|defined|provided|attributed|stated|as\s+(?:defined|set|given))|(?:is|are|be)\s+(?:as\s+)?defined\s+in|(?:has|have)\s+the\s+same\s+meanings?\s+as)\b`,

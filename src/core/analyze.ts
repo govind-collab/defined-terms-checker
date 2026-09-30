@@ -283,9 +283,11 @@ function headingLike(p: ParagraphInput, tokens: Token[], hasDefinition: boolean)
 // "Scope of Work: The Contractor shall ...": a Title Case line opener ending in ":" or "." before a capital.
 function runInHeadingSpans(text: string, tokens: Token[]): Array<[number, number]> {
   const spans: Array<[number, number]> = [];
+  let first = 0;
   for (const start of lineStarts(text)) {
-    const first = tokens.findIndex((t) => t.start >= start && !t.marker);
-    if (first < 0 || !tokens[first].capital) continue;
+    while (first < tokens.length && (tokens[first].start < start || tokens[first].marker)) first++;
+    if (first >= tokens.length) break;
+    if (!tokens[first].capital) continue;
     let last = first;
     for (let k = first + 1; k < tokens.length && k - first < MAX_HEADING_WORDS; k++) {
       const t = tokens[k];
@@ -320,6 +322,7 @@ function collectCandidates(
   const { text, tokens, excluded } = s;
   const covered = new Uint8Array(tokens.length);
   for (const m of s.matches) for (let i = m.first; i <= m.last; i++) covered[i] = 1;
+  const titleList = [...titles];
 
   const usable = (i: number): boolean => i < tokens.length && !excluded[i] && tokens[i].capital;
   // "Board of Directors", "Tier 2 Support". A number after a cross-reference word ("Section 3") does not join.
@@ -362,7 +365,7 @@ function collectCandidates(
     if (uncovered.length < phrase.length && uncovered.every((k) => PLACES.has(normalizeWord(tokens[k].text))))
       return;
     const key = familyKey(lowers.join(' '));
-    if (titles.has(key) || (words.length > 1 && [...titles].some((t) => t.startsWith(key + ' ')))) return;
+    if (titles.has(key) || (words.length > 1 && titleList.some((t) => t.startsWith(key + ' ')))) return;
     if (capitals.length >= 2 && capitals.every((k) => tokens[k].caps)) return;
     if (capitals.length === 1) {
       const k = capitals[0];

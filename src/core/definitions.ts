@@ -226,7 +226,8 @@ function classifyQuoted(
   if (open >= 0) {
     let inner = text.slice(open + 1, span.start);
     // Blank out earlier quoted terms in the same parentheses: (each a "Party" and together the "Parties").
-    for (const other of [...spans].reverse()) {
+    for (let k = spans.length - 1; k >= 0; k--) {
+      const other = spans[k];
       if (other.start > open && other.end <= span.start) {
         inner = inner.slice(0, other.start - open - 1) + '§' + inner.slice(other.end - open - 1);
       }
@@ -244,10 +245,8 @@ function unquotedLineInitial(
   tokens: Token[],
   quoted: QuotedSpan[],
   lineStart: number,
-  lineEnd: number,
+  firstIndex: number,
 ): DefinitionMatch | null {
-  const firstIndex = tokens.findIndex((t) => t.start >= lineStart && t.start < lineEnd && !t.marker);
-  if (firstIndex < 0) return null;
   const first = tokens[firstIndex];
   if (quoted.some((q) => first.start >= q.start && first.start < q.end)) return null;
   if (stripLeadingMarkers(text.slice(lineStart, first.start)).trim() !== '') return null;
@@ -428,15 +427,12 @@ function unquotedBrackets(text: string, tokens: Token[]): DefinitionMatch[] {
 export function findDefinitions(text: string, tokens: Token[], singleQuotes: boolean): ParagraphDefinitions {
   const quoted = findQuotedSpans(text, singleQuotes);
   const starts = lineStarts(text);
-  const lineStartFor = (pos: number): number => {
-    let s = 0;
-    for (const ls of starts) if (ls <= pos) s = ls;
-    return s;
-  };
 
   const definitions: DefinitionMatch[] = [];
+  let line = 0;
   for (const span of quoted) {
-    const found = classifyQuoted(text, span, quoted, lineStartFor(span.start));
+    while (line + 1 < starts.length && starts[line + 1] <= span.start) line++;
+    const found = classifyQuoted(text, span, quoted, starts[line]);
     if (!found) continue;
     definitions.push({
       term: span.term,
@@ -452,9 +448,13 @@ export function findDefinitions(text: string, tokens: Token[], singleQuotes: boo
     const longForm = run.length > 0 ? weakInline(text, run[0].start, run[run.length - 1].end) : null;
     if (longForm) definitions.push(longForm);
   }
+  let first = 0;
   for (let i = 0; i < starts.length; i++) {
     const lineEnd = i + 1 < starts.length ? starts[i + 1] : text.length;
-    const d = unquotedLineInitial(text, tokens, quoted, starts[i], lineEnd);
+    while (first < tokens.length && (tokens[first].start < starts[i] || tokens[first].marker)) first++;
+    if (first >= tokens.length) break;
+    if (tokens[first].start >= lineEnd) continue;
+    const d = unquotedLineInitial(text, tokens, quoted, starts[i], first);
     if (d) definitions.push(d);
   }
   for (const d of unquotedBrackets(text, tokens)) definitions.push(d);

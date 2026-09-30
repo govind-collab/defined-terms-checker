@@ -45,12 +45,11 @@ const SOURCE_TEXT: Record<TextSource, string> = {
 
 interface State {
   snapshot: DocumentSnapshot | null;
-  result: AnalysisResult | null;
   ignored: string[];
   busy: boolean;
 }
 
-const state: State = { snapshot: null, result: null, ignored: [], busy: false };
+const state: State = { snapshot: null, ignored: [], busy: false };
 
 function byId<T extends HTMLElement>(id: string): T {
   const el = document.getElementById(id);
@@ -113,12 +112,12 @@ async function runCheck(): Promise<void> {
 
 function reanalyze(): void {
   if (!state.snapshot) return;
-  state.result = analyze(state.snapshot.paragraphs, {
+  const result = analyze(state.snapshot.paragraphs, {
     singleQuotes: byId<HTMLInputElement>('opt-single').checked,
     checkLowercase: byId<HTMLInputElement>('opt-lower').checked,
     ignore: state.ignored,
   });
-  render();
+  render(state.snapshot, result);
 }
 
 async function goTo(loc: Location): Promise<void> {
@@ -157,15 +156,10 @@ function restoreAll(): void {
   setIgnored([], 'The ignore list for this document is empty again.');
 }
 
-function render(): void {
-  const { snapshot, result } = state;
+function render(snapshot: DocumentSnapshot, result: AnalysisResult): void {
   const summary = byId('summary');
   const findings = byId('findings');
   findings.replaceChildren();
-  if (!snapshot || !result) {
-    summary.hidden = true;
-    return;
-  }
 
   const { stats } = result;
   const ignoredNote = stats.ignored > 0 ? ` ${stats.ignored} hidden by the ignore list.` : '';

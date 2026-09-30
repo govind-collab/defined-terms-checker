@@ -1,0 +1,48 @@
+// A short mutual NDA with 6 planted problems. samples/sample-nda.docx is the same text in Word.
+// Planted: "Project" and "Steering Committee" never defined; "Business Day" never used;
+// "Survival Period" defined twice; "Compelled Disclosure" used before its inline definition;
+// "representatives" in lowercase once.
+# MUTUAL NON-DISCLOSURE AGREEMENT
+This Mutual Non-Disclosure Agreement is made on 1 May 2026 between Acme Analytics Inc., a Delaware corporation with offices at 100 Main Street, Wilmington, Delaware ("Acme"), and Beta Labs Limited, a company registered in England and Wales ("Beta"), each a "Party" and together the "Parties".
+# Background
+(A) The Parties wish to explore a possible commercial relationship concerning the Project.
+(B) Each Party may disclose Confidential Information to the other Party for the Purpose.
+# 1. Definitions
+1.1 In this Agreement the following words have the following meanings:
+"Affiliate" means any entity that controls, is controlled by or is under common control with a Party.
+"Agreement" means this Mutual Non-Disclosure Agreement.
+"Business Day" means a day other than a Saturday, Sunday or public holiday in England.
+"Confidential Information" means all information disclosed by the Discloser to the Recipient in connection with the Purpose, whether before or after the Effective Date, that is marked as confidential or would reasonably be regarded as confidential.
+"Discloser" means the Party disclosing Confidential Information.
+"Effective Date" means the date of this Agreement.
+"Purpose" means the evaluation and negotiation of the Project.
+"Recipient" means the Party receiving Confidential Information.
+"Representatives" means a Party's directors, officers, employees, Affiliates and professional advisers.
+"Survival Period" means the period described in clause 4.1.
+# 2. Confidentiality
+2.1 The Recipient shall keep the Confidential Information confidential and shall not disclose it to any person other than its Representatives who need to know it for the Purpose, or in a Compelled Disclosure.
+2.2 The Recipient shall ensure that its representatives comply with this clause 2.
+2.3 Confidential Information does not include information that is or becomes public other than through a breach of this Agreement.
+2.4 The Recipient may disclose Confidential Information to the extent required by law or by a court of competent jurisdiction (a "Compelled Disclosure"), provided that it gives the Discloser prompt notice.
+# 3. Return of Information
+3.1 Within 10 days of a written request, the Recipient shall return or destroy all Confidential Information.
+3.2 The Recipient shall confirm in writing to the Discloser that it has complied with clause 3.1.
+# 4. Term
+4.1 This Agreement starts on the Effective Date and continues for 2 years, after which the obligations in clause 2 continue for a further 3 years (the "Survival Period").
+4.2 During the Survival Period the Recipient remains bound by clause 2.
+# 5. General
+5.1 Neither Party may assign this Agreement without the prior written consent of the other Party.
+5.2 This Agreement is governed by the laws of England and Wales and the Parties submit to the exclusive jurisdiction of the Courts of England.
+5.3 The Steering Committee shall meet quarterly to review the Project.
+# Schedule 1
+| Item
+| Description
+| Project
+| The joint development of an analytics dashboard for Beta's customers.
+# Signatures
+Signed by Acme Analytics Inc.
+Name: Jane Doe
+Title: Director
+Signed by Beta Labs Limited
+Name: John Roe
+Title: Director

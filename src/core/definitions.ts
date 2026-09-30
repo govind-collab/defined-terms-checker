@@ -76,9 +76,8 @@ const INCLUDES_RE = new RegExp(LEAD + String.raw`includes?\b`, 'iu');
 const NEGATIVE_RE = /^\s*(?:(?:does|do|shall|will|may)\s+not\b|excludes?\b|(?:is|are)\s+not\b)/iu;
 // "Business Day": a day ... / Business Day – a day ...
 const COLON_RE = /^[ \t\u00a0]*(?::|[–—]|-(?=\s))/u;
-// "Confidential Information" shall be returned ...: a quoted term opening an ordinary sentence.
-const SENTENCE_VERB_RE =
-  /^(?:shall|will|must|may|might|can|could|should|would|is|are|was|were|be|been|has|have|had|does|do|did|applies|apply|remains?|constitutes?)\b/iu;
+// "Business Day" a day other than ...: without a colon, the meaning has to open with a determiner or a number
+const LIST_BODY_RE = /^(?:a|an|the|any|all|each|every|such|this|that|these|those|either|one|\p{N})\b/u;
 // "X", "Y" and "Z" mean ... / "X" (or "Xs") means ...
 const CHAIN_RE =
   /^(?:\s*\(?\s*,?\s*(?:and\/or|and|or)?\s*(?:["“„«‟][^"“”„«»‟\n\r\v]{1,120}?["”“»‟]|['‘][^'‘’\n\r\v]{1,120}?['’])\s*\)?)+/u;
@@ -303,13 +302,11 @@ function colonDefinition(phrase: Token[], after: string): boolean {
   return (body.match(WORD_RE) ?? []).length >= 3;
 }
 
-// A colon, a dash, nothing (a table cell) or a lowercase non-verb. A capital or a verb opens a sentence.
+// A colon, a dash, nothing (a table cell) or a determiner. Anything else is a sentence that opens with the term.
 function listMeaning(rest: string): boolean {
   if (COLON_RE.test(rest)) return true;
   const body = rest.trimStart();
-  if (body === '') return true;
-  if (/^\p{Lu}/u.test(body)) return false;
-  return !SENTENCE_VERB_RE.test(body);
+  return body === '' || LIST_BODY_RE.test(body);
 }
 
 // "Vendor" and "Closing Date" pass. "Reserved", "Exhibit A", "Oregon", "Acme Inc." and "Companies Act" do not.

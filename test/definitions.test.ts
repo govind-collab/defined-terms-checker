@@ -127,6 +127,7 @@ describe('findDefinitions: definitions-section forms', () => {
     expect(defs('"Business Day" a day other than a Saturday.')).toEqual([['Business Day', 'list', false]]);
     expect(defs('"Business Day"')).toEqual([['Business Day', 'list', false]]);
     expect(defs('"Confidential Information" shall be returned on request.')).toEqual([]);
+    expect(defs('"Confidential Information" received by a Party shall be kept secret.')).toEqual([]);
     expect(defs('"Confidential Information" Recipient shall return it.')).toEqual([]);
     expect(defs('"The "Company" Group" means the group.')).toEqual([]);
   });

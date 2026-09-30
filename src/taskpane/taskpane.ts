@@ -69,8 +69,7 @@ function el<K extends keyof HTMLElementTagNameMap>(
   return node;
 }
 
-// office.js comes from Microsoft's CDN. Without this check a failed load leaves a disabled button and no
-// explanation.
+// office.js comes from Microsoft's CDN. Without this check a failed load leaves a disabled button.
 if (typeof Office === 'undefined') {
   setStatus(
     'Office.js did not load, so the pane cannot reach Word. Check the connection and reopen the pane.',

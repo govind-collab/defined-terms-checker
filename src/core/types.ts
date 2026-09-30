@@ -19,14 +19,7 @@ export interface Location {
   context: string;
 }
 
-/**
- * How a definition was written.
- *  - list:      the term opens the paragraph or line, as in a definitions list ("Business Day": a day ...)
- *  - means:     "X" means / shall mean / refers to / is defined as ...
- *  - reference: "X" has the meaning given in clause 3 (points somewhere else)
- *  - inline:    Acme Corp. (the "Company"), or "referred to as the "Company""
- *  - includes:  "X" includes ... (enlarging; counts as a definition only when nothing better exists)
- */
+/** list: "Business Day": a day. means: "X" means. reference: has the meaning given in. inline: (the "Company"). */
 export type DefinitionForm = 'list' | 'means' | 'reference' | 'inline' | 'includes';
 
 export interface Definition {
@@ -42,7 +35,6 @@ export type FindingKind = 'undefined' | 'unused' | 'duplicate' | 'before-definit
 
 export interface Finding {
   kind: FindingKind;
-  /** Display form of the term. */
   term: string;
   key: string;
   message: string;

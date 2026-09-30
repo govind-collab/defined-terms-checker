@@ -332,8 +332,7 @@ describe('analyze: UK drafting', () => {
   });
 });
 
-// Cases from a real government-funded service contract that produced 55 "never defined" findings on the
-// first run. Each one below was a rule gap, not an ignore-list job.
+// From a public government-funded service contract that produced 55 "never defined" findings on the first run.
 describe('analyze: lessons from a real contract', () => {
   it('counts uses that follow an inline definition in the same paragraph', () => {
     const result = run([

@@ -1,6 +1,4 @@
-// A word starts with a letter or digit and may carry combining marks (accents typed on a Mac arrive
-// decomposed) and invisible format characters (soft hyphens, zero-width spaces) that Word and pasted text
-// leave inside words. Both are dropped again by normalizeWord.
+// A word may carry combining marks and format characters (soft hyphens, zero-width spaces).
 export const WORD_RE =
   /[\p{L}\p{N}][\p{L}\p{N}\p{M}\p{Cf}]*(?:['’.-][\p{L}\p{N}][\p{L}\p{N}\p{M}\p{Cf}]*)*/gu;
 
@@ -22,10 +20,7 @@ export function stripPossessive(word: string): string {
   return word.replace(/['’]s$|['’]$/u, '');
 }
 
-/**
- * Case-insensitive, quote-insensitive, possessive-free form of a word, with accents composed and invisible
- * format characters dropped: "U.S." and "U.S" agree, and so do "Café" typed on a Mac and on Windows.
- */
+// "U.S." and "U.S" agree, and so do "Café" typed on a Mac and on Windows.
 export function normalizeWord(word: string): string {
   return stripPossessive(
     word
@@ -36,10 +31,7 @@ export function normalizeWord(word: string): string {
   ).toLowerCase();
 }
 
-/**
- * A light singularizer, applied to both sides of a comparison, so it only has to be
- * consistent, not correct English: Parties -> Party, Losses -> Loss, Business -> Business.
- */
+// Applied to both sides, so it only has to agree with itself: Parties -> Party, Business -> Business.
 export function singular(word: string): string {
   if (word.length <= 3) return word;
   if (/[^aeiou]ies$/.test(word)) return word.slice(0, -3) + 'y';
@@ -49,7 +41,6 @@ export function singular(word: string): string {
   return word;
 }
 
-/** Key for a whole term: normalized words joined by single spaces. */
 export function termKey(term: string): string {
   return term.trim().split(/\s+/).map(normalizeWord).join(' ');
 }

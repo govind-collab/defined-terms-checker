@@ -1,5 +1,4 @@
-// Word lists that keep ordinary capitalized words out of the findings.
-// Everything is lowercase; compare against normalizeWord() output.
+// Lowercase word lists, compared against normalizeWord() output.
 
 /** Lowercase words allowed inside a defined term: "Board of Directors", "Terms and Conditions". */
 export const TERM_CONNECTORS = new Set([
@@ -7,10 +6,7 @@ export const TERM_CONNECTORS = new Set([
   'an', 'this', '&', 'de', 'la', 'du', 'von', 'van', 'der',
 ]);
 
-/**
- * Lowercase words that may join two capitalized words into one undefined candidate.
- * "and" and "or" are left out on purpose: "Buyer and Seller" is two terms far more often than one.
- */
+/** Join 2 capitalized words into 1 candidate. "and" is left out: "Buyer and Seller" is 2 terms. */
 export const RUN_JOINERS = new Set(['of', 'for', 'in', 'on', '&']);
 
 /** Never a defined term on their own, even in quotes: a stray quote mark can wrap "The" or "And". */
@@ -20,7 +16,7 @@ export const NEVER_A_TERM = new Set([
   'your', 'he', 'she', 'his', 'her', 'they', 'their', 'them', 'is', 'are', 'be',
 ]);
 
-/** Capitalized only because they open a sentence; never a defined term on their own. */
+/** Capitalized only because they open a sentence. */
 export const FUNCTION_WORDS = new Set([
   'the', 'a', 'an', 'this', 'that', 'these', 'those', 'each', 'every', 'any', 'all', 'no', 'none',
   'some', 'such', 'both', 'either', 'neither', 'in', 'on', 'at', 'for', 'if', 'unless', 'until',
@@ -41,7 +37,7 @@ export const FUNCTION_WORDS = new Set([
   'immediately', 'promptly', 'failing', 'absent', 'regardless', 'irrespective',
 ]);
 
-/** Form and signature-block labels: "Name:", "Date:", "Address:". Never a colon-form definition. */
+/** Form and signature-block labels: "Name:", "Date:", "Address:". */
 export const LABEL_WORDS = new Set([
   'name', 'title', 'date', 'by', 'address', 'email', 'e-mail', 'phone', 'telephone', 'tel', 'fax',
   'attention', 'attn', 'subject', 're', 'cc', 'signature', 'signed', 'witness', 'notes', 'example',
@@ -61,7 +57,7 @@ export const PAREN_LABELS = new Set([
 /** "Clause 32.8(c)", "Section 3": a cross-reference with its number, as a regex source. */
 export const CROSSREF_SOURCE = String.raw`\b(?:Clause|Section|Schedule|Paragraph|Part|Article|Annex|Appendix|Exhibit|Recital|Chapter)s?\s+\d[\w.()]*`;
 
-/** Cross-reference words. "Section 3", "Schedule 2" and "this Clause" are not defined terms. */
+/** Cross-reference words: "Section 3", "Schedule 2", "this Clause". */
 export const STRUCTURAL_WORDS = new Set([
   'section', 'sections', 'subsection', 'subsections', 'clause', 'clauses', 'sub-clause',
   'sub-clauses', 'subclause', 'subclauses', 'article', 'articles', 'schedule', 'schedules',
@@ -78,18 +74,14 @@ export const CALENDAR_WORDS = new Set([
   'sunday', 'jan', 'feb', 'mar', 'apr', 'jun', 'jul', 'aug', 'sep', 'sept', 'oct', 'nov', 'dec',
 ]);
 
-/**
- * A capitalized phrase with one of these anywhere names a legal instrument: "Protocol to Prevent,
- * Suppress and Punish Trafficking in Persons", "Trafficking Victims Protection Act". "Code" and
- * "Order" are left out because "Code of Conduct" and "Purchase Order" are ordinary defined terms.
- */
+/** Legal instruments: "Trafficking Victims Protection Act". "Code" and "Order" stay out ("Purchase Order"). */
 export const INSTRUMENT_WORDS = new Set([
   'act', 'acts', 'protocol', 'convention', 'treaty', 'charter', 'declaration', 'statute',
   'statutes', 'regulations', 'regulation', 'directive', 'directives', 'ordinance', 'amendment',
   'constitution', 'rules',
 ]);
 
-/** Legal-form endings. A multi-word phrase containing one is a party name, not a term. */
+/** Legal-form endings: a multi-word phrase with one is a party name. */
 export const CORPORATE_SUFFIXES = new Set([
   'inc', 'llc', 'l.l.c', 'ltd', 'limited', 'corp', 'corporation', 'incorporated', 'plc', 'gmbh',
   'ag', 'sa', 's.a', 'nv', 'n.v', 'bv', 'b.v', 'lp', 'l.p', 'llp', 'l.l.p', 'lllp', 'pty', 'pte',
@@ -102,7 +94,7 @@ export const HONORIFICS = new Set([
   'judge', 'justice',
 ]);
 
-/** Address endings. "100 Main Street" is a place, not a term. */
+/** Address endings: "100 Main Street". */
 export const STREET_TAILS = new Set([
   'street', 'avenue', 'road', 'lane', 'drive', 'boulevard', 'blvd', 'suite', 'floor', 'plaza',
   'square', 'terrace', 'parkway', 'highway', 'building', 'tower', 'crescent', 'gardens', 'park',
@@ -120,10 +112,7 @@ export const ACRONYM_STOP = new Set([
   'ucc', 'gaap', 'ifrs', 'iso', 'ansi', 'ieee', 'ascii', 'html', 'xml', 'json', 'api', 'sla',
 ]);
 
-/**
- * Public bodies and well-known agencies, as they appear in government and cross-border contracts.
- * Compared by whole phrase, so "Comptroller General" and "USAID" are skipped but "General" is not.
- */
+/** Public bodies and agencies, matched as whole phrases: "Comptroller General", "USAID". */
 export const PUBLIC_BODIES = new Set([
   'congress', 'parliament', 'senate', 'house of representatives', 'treasury', 'comptroller general',
   'attorney general', 'secretary of state', 'inspector general', 'contracting officer',
@@ -157,10 +146,10 @@ export const PUBLIC_BODIES = new Set([
   'uncitral', 'icsid', 'jams',
 ]);
 
-/** Political and geographic initialisms. "US Government", "EU Sanctions List" and "UN Security Council" are names. */
+/** Political and geographic initialisms: "US Government", "EU Sanctions List". */
 export const GEO_ACRONYMS = new Set(['us', 'usa', 'uk', 'eu', 'un', 'uae', 'prc', 'gcc', 'au', 'oecd']);
 
-/** Words that cite a regulation; the capitalized clause title after them is not a term. */
+/** Words that cite a regulation, with the clause title after them. */
 export const CITATION_WORDS = new Set(['far', 'dfars', 'cfr', 'usc', 'aidar', 'ar', 'fam', 'ads']);
 
 const US_STATES = [
@@ -215,7 +204,6 @@ const CITIES = [
   'santiago', 'buenos aires', 'sao paulo', 'rio de janeiro', 'kyiv', 'moscow',
 ];
 
-/** Place names in lowercase, single and multi-word. */
 export const PLACES = new Set([...US_STATES, ...COUNTRIES, ...CITIES]);
 
 /** Words that may sit in front of a place name: "State of Delaware", "Courts of England". */

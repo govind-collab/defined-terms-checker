@@ -4,19 +4,10 @@ export type TextSource = 'getText' | 'reviewed' | 'plain';
 
 export interface DocumentSnapshot {
   paragraphs: ParagraphInput[];
-  /**
-   * Where the paragraph text came from. `getText` (WordApi 1.7) leaves out hidden text and tracked
-   * deletions, `reviewed` (WordApi 1.4) leaves out tracked deletions, `plain` is the raw text.
-   */
+  /** getText (WordApi 1.7) leaves out hidden text and tracked deletions, reviewed (1.4) only deletions. */
   textSource: TextSource;
 }
 
-/**
- * selected:  the exact occurrence is selected.
- * moved:     the paragraph changed since the check, but the text occurs once in the document and is selected.
- * paragraph: the text is gone from that paragraph; the paragraph is selected instead.
- * stale:     nothing to select; the document changed too much since the check.
- */
 export type SelectOutcome = 'selected' | 'moved' | 'paragraph' | 'stale';
 
 const HEADING_STYLE_RE = /^(?:Heading\d|Title|Subtitle|Toc\d|TocHeading)$/;
@@ -40,11 +31,7 @@ function textSource(): TextSource {
   return 'plain';
 }
 
-/**
- * Reads every body paragraph in two round trips: one for the paragraph list, one for the clean text.
- * `Paragraph.text` is not documented either way on tracked deletions, so the clean text is asked for
- * explicitly whenever the host can provide it.
- */
+// 2 round trips: the paragraph list, then clean text, since Paragraph.text may include tracked deletions.
 export async function readDocument(): Promise<DocumentSnapshot> {
   return Word.run(async (context) => {
     const paragraphs = context.document.body.paragraphs;
@@ -80,7 +67,7 @@ export async function selectLocation(loc: Location): Promise<SelectOutcome> {
   const needle = loc.text.replace(/\^/g, '^^');
   return Word.run(async (context) => {
     const paragraphs = context.document.body.paragraphs;
-    // Loading one small scalar is what materialises `items`; the text is not needed here.
+    // Loading one small scalar is what materialises items. The text is not needed here.
     paragraphs.load('items/tableNestingLevel');
     await context.sync();
 
@@ -114,7 +101,7 @@ export async function selectLocation(loc: Location): Promise<SelectOutcome> {
   });
 }
 
-/** A short message for the pane; the full Office error goes to the console. */
+/** A short message for the pane. The full Office error goes to the console. */
 export function describeError(error: unknown): string {
   if (error instanceof OfficeExtension.Error) {
     console.error('Office error', error.code, error.message, error.debugInfo);

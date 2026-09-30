@@ -8,7 +8,6 @@ export interface Token {
   sentenceStart: boolean;
   /** Part of a list marker such as "1.1", "(a)" or "(iv)". */
   marker: boolean;
-  /** Starts with an uppercase letter. */
   capital: boolean;
   /** Two or more letters, all uppercase. */
   caps: boolean;
@@ -29,7 +28,6 @@ export function lineStarts(text: string): number[] {
   return starts;
 }
 
-/** Removes list markers from the front of a line prefix. */
 export function stripLeadingMarkers(s: string): string {
   LINE_MARKER_RE.lastIndex = 0;
   let end = 0;

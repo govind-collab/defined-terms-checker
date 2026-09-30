@@ -54,15 +54,15 @@ interface Candidate {
   locations: Location[];
 }
 
-// Clause 32.8(c) (Payments by the Supplier): the bracketed clause title is not a term.
+// Clause 32.8(c) (Payments by the Supplier): the bracketed clause title is excluded.
 const TITLE_PAREN_RE = new RegExp(CROSSREF_SOURCE + String.raw`\s*\(([^()\n]{1,80})\)`, 'gu');
 const YEAR_RE = /^(?:1[89]|20)\d\d$/;
 // 52.203-19, 200.303: the numbers regulations are cited by.
 const CITATION_NUMBER_RE = /^\d{1,3}\.\d{2,4}(?:-\d{1,3})?$/;
-// After a run-in heading: ": The Contractor shall", ". Any dispute", ": MC-2026-01". A lowercase start is a definition.
+// After a run-in heading: ": The Contractor shall", ". Any dispute". A lowercase start is a definition.
 const HEADING_TAIL_RE = /^[:.]\s*(?!\p{Ll})/u;
 const MAX_HEADING_WORDS = 12;
-/** Same limit as parseTerm: a capitalized run longer than this is a title or a list, not a missing definition. */
+/** Same limit as parseTerm: a longer capitalized run is a title or a list. */
 const MAX_CANDIDATE_WORDS = 8;
 const CONTEXT_CHARS = 40;
 const SENTENCE_LOOKBACK = 25;
@@ -124,8 +124,7 @@ export function analyze(paragraphs: ParagraphInput[], options: AnalysisOptions =
         locations: defs.map((d) => d.location),
       });
     }
-    // "X" has the meaning given in clause 3 points at another definition rather than adding one, and
-    // two definitions inside one paragraph are one drafting event, not a duplicate.
+    // A cross-reference adds no definition, and 2 definitions in 1 paragraph are 1 drafting event.
     const strong = defs.filter((d) => !d.weak && d.form !== 'reference');
     const firstPerParagraph = strong.filter(
       (d, i) => i === 0 || d.location.paragraph !== strong[i - 1].location.paragraph,
@@ -215,10 +214,7 @@ function matchUses(scanned: Scanned[], terms: Map<string, TermEntry>): Uses {
   const familyUses = new Map<string, number>();
   for (const s of scanned) {
     s.matches = index.matchAll(s.text, s.tokens);
-    // The sentence of a definitions entry ("Agreement" means this agreement, "Affiliate" means an Affiliate
-    // of ...) names its term without using it, so matches inside it are skipped. Everything else in the
-    // paragraph, before or after, is a use: an inline definition sits in running text that goes on to use
-    // the term, and a "means" sentence can follow the term's first use in the same paragraph.
+    // Matches inside a definitions entry's own sentence ("Agreement" means this agreement) are not uses.
     const entries = s.definitions
       .filter((d) => d.form !== 'inline')
       .map((d) => ({ key: d.key, start: d.start, end: sentenceEndAfter(s, d.end) }));
@@ -279,16 +275,12 @@ function headingLike(p: ParagraphInput, tokens: Token[], hasDefinition: boolean)
   if (words.length === 0) return true;
   if (isAllCaps(tokens)) return true;
   if (hasDefinition) return false;
-  // Short and unpunctuated reads as a title or a table cell, not a sentence. "the Services; and" is a list item.
+  // Short and unpunctuated reads as a title or a table cell. "the Services; and" is a list item.
   const trimmed = p.text.trim().replace(/\s+(?:and|or)$/iu, '');
   return words.length <= MAX_HEADING_WORDS && !/[.;:!?,]$/.test(trimmed);
 }
 
-/**
- * Run-in headings inside a paragraph: "Representations, Warranties and Additional Covenants. Contractor
- * represents ...", "Scope of Work: The Contractor shall ...". The Title Case segment at the start of a line
- * that ends in "." or ":" and is followed by a capital (or nothing) is a heading, not a set of terms.
- */
+// "Scope of Work: The Contractor shall ...": a Title Case line opener ending in ":" or "." before a capital.
 function runInHeadingSpans(text: string, tokens: Token[]): Array<[number, number]> {
   const spans: Array<[number, number]> = [];
   for (const start of lineStarts(text)) {
@@ -308,11 +300,7 @@ function runInHeadingSpans(text: string, tokens: Token[]): Array<[number, number
   return spans;
 }
 
-/**
- * Offset where the sentence containing `pos` ends: the next sentence start that follows a full stop, a
- * question or exclamation mark, or a line break. A colon or a list marker ("Charges: the charges ...",
- * "means: (a) ...") continues the same definition.
- */
+// Ends at the next sentence start after ".", "!", "?" or a line break. A colon or a list marker continues it.
 function sentenceEndAfter(s: Scanned, pos: number): number {
   const { tokens, text } = s;
   for (let k = 1; k < tokens.length; k++) {
@@ -361,7 +349,7 @@ function collectCandidates(
     const capitals = phrase.filter((k) => tokens[k].capital);
     if (words.length > 1 && lowers.some((w) => CORPORATE_SUFFIXES.has(w))) return;
     if (HONORIFICS.has(lowers[0])) return;
-    // "Section 3", "Exhibit A", "this Schedule": a cross-reference, not a term.
+    // "Section 3", "Exhibit A", "this Schedule": cross-references.
     if (STRUCTURAL_WORDS.has(lowers[0]) && words.length <= 2) return;
     if (lowers.some((w) => INSTRUMENT_WORDS.has(w))) return;
     if (next !== undefined && YEAR_RE.test(next.text) && adjacent(text, tokens[last], next)) return;
@@ -460,11 +448,7 @@ function crossRefTitle(text: string, tokens: Token[], i: number): boolean {
   );
 }
 
-/**
- * A run of capitalized words is split at the defined terms inside it. "Board of Directors of the
- * Company" gives the candidate "Board of Directors" and leaves "Company" as a use; "Support Services"
- * with only "Services" defined is reported whole, because the longer phrase is the likely term.
- */
+// "Board of Directors of the Company" -> "Board of Directors", with "Company" a use. "Support Services" stays whole.
 function splitRun(run: number[], tokens: Token[], covered: Uint8Array): number[][] {
   const segments: number[][] = [[]];
   const joiners: number[] = [];
@@ -497,8 +481,7 @@ function splitRun(run: number[], tokens: Token[], covered: Uint8Array): number[]
 
 function locate(s: Scanned, start: number, end: number): Location {
   const text = s.text.slice(start, end);
-  // Non-overlapping positions of this substring, found once per paragraph. Word's search walks the same way,
-  // so the ordinal (how many earlier occurrences there are) picks the right hit.
+  // Non-overlapping positions, counted the way Word's search counts them, so the ordinal picks the right hit.
   let positions = s.occurrences.get(text);
   if (!positions) {
     positions = [];

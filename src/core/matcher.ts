@@ -28,12 +28,7 @@ interface Compiled {
   words: string[];
 }
 
-/**
- * Finds uses of defined terms in a token stream. Matching is aligned to whole tokens, case-insensitive,
- * and tolerant of a plural or possessive on the last word ("Business Days", "Party's"). At any position
- * the longest term wins, and among equal lengths an exact form beats a plural/singular fudge, so
- * "Third Party" is found before "Party" and "Terms" is matched to "Terms" rather than "Term".
- */
+// Longest term first, and an exact form before a plural fudge: "Third Party" before "Party", "Terms" over "Term".
 export class TermIndex {
   private readonly byFirst = new Map<string, Compiled[]>();
 
@@ -94,7 +89,7 @@ export class TermIndex {
   }
 }
 
-/** null when the term does not sit at position i; otherwise whether the last word needed the plural fudge. */
+/** null when the term is not at i, else whether the last word needed the plural fudge. */
 function fits(text: string, tokens: Token[], i: number, c: Compiled): boolean | null {
   const n = c.words.length;
   if (i + n > tokens.length) return null;

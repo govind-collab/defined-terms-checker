@@ -76,7 +76,7 @@ const INCLUDES_RE = new RegExp(LEAD + String.raw`includes?\b`, 'iu');
 const NEGATIVE_RE = /^\s*(?:(?:does|do|shall|will|may)\s+not\b|excludes?\b|(?:is|are)\s+not\b)/iu;
 // "Business Day": a day ... / Business Day – a day ...
 const COLON_RE = /^[ \t\u00a0]*(?::|[–—]|-(?=\s))/u;
-// "Confidential Information" shall be returned ...: a quoted term opening a sentence, not a definitions entry.
+// "Confidential Information" shall be returned ...: a quoted term opening an ordinary sentence.
 const SENTENCE_VERB_RE =
   /^(?:shall|will|must|may|might|can|could|should|would|is|are|was|were|be|been|has|have|had|does|do|did|applies|apply|remains?|constitutes?)\b/iu;
 // "X", "Y" and "Z" mean ... / "X" (or "Xs") means ...
@@ -85,15 +85,14 @@ const CHAIN_RE =
 // ... each being referred to individually as a "Party" / hereinafter "Licensor" / called the "Fee"
 const INLINE_LEAD_RE =
   /(?:referred\s+to(?:\s+herein)?(?:\s+(?:individually|collectively|jointly|severally|together))?\s+as|hereinafter(?:\s+referred\s+to\s+as)?|hereafter(?:\s+referred\s+to\s+as)?|known\s+as|called|defined\s+as|designated\s+as|named\s+as|(?:individually|collectively|jointly|severally|together)(?:\s+as)?|each(?:\s+of\s+them)?)\s+(?:(?:the|a|an|this)\s+)?$/iu;
-// Inside "(...)", text before the quote that says this is a reference, not a definition.
+// Inside "(...)", words before the quote that make it a reference.
 const PAREN_NEGATIVE_RE =
   /\b(?:defin\w*|see|including|includes|excluding|other\s+than|except|pursuant|meaning|referred\s+to\s+in|under|within|e\.g|cf|such\s+as)\b/iu;
 // Inside "(...)", what may sit right before the quote: "(the", "(each a", "(collectively,", "(".
 const PAREN_POSITIVE_RE =
   /(?:^|[\s,;:([§])(?:the|a|an|as|each|this|such|and|or|hereinafter|hereafter|called|collectively|individually|together|jointly|severally|being|namely|herein)\s*$|[,;:§]\s*$|^\s*$/iu;
 
-// Brackets with nothing quoted inside: (the Products), (Vendor), (each a Party and together the Parties),
-// Statement of Work (SOW). All weak, because the same brackets also hold plain asides.
+// (the Products), (Vendor), Statement of Work (SOW): weak, because the same brackets also hold asides.
 const BRACKET_RE = /[([]([^()[\]"“”„«»'‘’\n\r\v]{1,100})[)\]]/gu;
 const ACRONYM_RE = /^[A-Z][A-Z0-9.&-]{1,11}$/;
 const BRACKET_WORD_RE = /[^\s,;/]+|[,;/]/gu;
@@ -122,10 +121,7 @@ const PIECE_LEAD_INS = new Set([
 const PIECE_ARTICLES = new Set(['the', 'a', 'an', 'this']);
 const PIECE_CONNECTORS = new Set(['of', 'for', 'in', 'on', '&', 'the']);
 
-/**
- * Accepts "Confidential Information", "Board of Directors", "Seller's Knowledge", "Tier 1 Support",
- * "1445 Affidavit". Rejects "including", "the Company" and anything that is not a run of words.
- */
+// "Confidential Information", "Board of Directors", "Seller's Knowledge", "Tier 1 Support", "1445 Affidavit".
 export function parseTerm(raw: string): { term: string; key: string } | null {
   const words = raw.trim().split(/\s+/);
   if (words[0] === '' || words.length > MAX_TERM_WORDS) return null;
@@ -139,7 +135,7 @@ export function parseTerm(raw: string): { term: string; key: string } | null {
     else return null;
   }
   if (capitals === 0 || !(isCapital(words[0]) || /^\p{N}/u.test(words[0]))) return null;
-  // A stray quote mark can wrap "The" or "And"; a determiner on its own is never a term.
+  // A stray quote mark can wrap "The" or "And".
   if (words.length === 1 && NEVER_A_TERM.has(words[0].replace(/\.$/, '').toLowerCase())) return null;
   const term = words.join(' ');
   return { term, key: termKey(term) };
@@ -221,8 +217,7 @@ function classifyQuoted(
   if (INCLUDES_RE.test(rest)) return { form: 'includes', weak: true };
 
   const before = text.slice(lineStart, span.start);
-  // A quoted term that opens the line is a definitions entry ("Business Day": a day ..., "Business Day" a day
-  // ..., or the term alone in a table cell) unless what follows shows it opening an ordinary sentence.
+  // "Business Day": a day ... at the start of a line is a definitions entry unless a sentence follows.
   if (stripLeadingMarkers(before).trim() === '')
     return listMeaning(rest) ? { form: 'list', weak: false } : null;
   if (INLINE_LEAD_RE.test(before)) return { form: 'inline', weak: false };
@@ -296,11 +291,7 @@ function unquotedLineInitial(
   return form ? { ...parsed, form, weak: false, start, end } : null;
 }
 
-/**
- * "Charges: the charges set out in Schedule 2" defines a term. "Scope of Work: The Contractor shall ..." is a
- * run-in heading, "Contractor: Acme Ltd" a contact line and "Note: see below" a label; none of those define.
- * The meaning after the colon starts in lowercase (or with a number or a quote), a heading's sentence does not.
- */
+// "Charges: the charges ..." defines. "Scope of Work: The Contractor ..." and "Note: see below" do not.
 function colonDefinition(phrase: Token[], after: string): boolean {
   if (phrase.length > 4) return false;
   const body = after.replace(COLON_RE, '').trimStart();
@@ -313,11 +304,7 @@ function colonDefinition(phrase: Token[], after: string): boolean {
   return (body.match(WORD_RE) ?? []).length >= 3;
 }
 
-/**
- * What may follow a quoted term that opens a line for it to be a definitions entry: a colon or dash, nothing
- * at all (a table cell), or a meaning that starts in lowercase with something other than a verb. A capital
- * or a verb ("Confidential Information" shall be returned) means the term is the subject of a sentence.
- */
+// A colon, a dash, nothing (a table cell) or a lowercase non-verb. A capital or a verb opens a sentence.
 function listMeaning(rest: string): boolean {
   if (COLON_RE.test(rest)) return true;
   const body = rest.trimStart();
@@ -326,7 +313,7 @@ function listMeaning(rest: string): boolean {
   return !SENTENCE_VERB_RE.test(body);
 }
 
-/** Keeps "Vendor" and "Closing Date"; drops "Reserved", "Exhibit A", "Oregon", "Acme Inc." and "Companies Act". */
+// "Vendor" and "Closing Date" pass. "Reserved", "Exhibit A", "Oregon", "Acme Inc." and "Companies Act" do not.
 function plausibleUnquotedTerm(term: string): boolean {
   const lowers = term.split(' ').map(normalizeWord);
   const first = lowers[0];
@@ -392,11 +379,7 @@ function acronymIntroduction(
   return [];
 }
 
-/**
- * Reads the pieces of a bracket with no quotes in it: "(the Products)", "(Vendor)", "(each a Party and together
- * the Parties)". Any word that is not a lead-in, an article, a separator or part of a capitalized phrase makes
- * the bracket an aside ("(subject to the Conditions)"), and nothing is returned.
- */
+// "(the Products)", "(each a Party and together the Parties)". Any other kind of word makes the bracket an aside.
 function bracketPieces(text: string, content: string, base: number): DefinitionMatch[] {
   const words = [...content.matchAll(BRACKET_WORD_RE)];
   const out: DefinitionMatch[] = [];
@@ -413,7 +396,7 @@ function bracketPieces(text: string, content: string, base: number): DefinitionM
     while (i < words.length) {
       const w = words[i][0];
       const next = words[i + 1];
-      // "(3 Siblings or 2 Siblings and 1 Parent)": a number opens a count, not a term.
+      // "(3 Siblings or 2 Siblings and 1 Parent)": a leading number is a count.
       if (isCapital(w) || (i > first && /^\p{N}/u.test(w))) i++;
       else if (i > first && PIECE_CONNECTORS.has(w.toLowerCase()) && next !== undefined && isCapital(next[0]))
         i++;

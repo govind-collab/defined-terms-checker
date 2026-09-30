@@ -1,6 +1,4 @@
-// The ignore list lives in the task pane's local storage, keyed by the document's URL. Putting it in
-// Office.context.document.settings would work too, but that writes into the .docx, and this add-in
-// never changes the file. An unsaved document has no URL, so its list lasts for the session only.
+// localStorage keyed by the document URL. Office.context.document.settings would be saved into the .docx.
 
 const PREFIX = 'defined-terms-checker:ignore:';
 let sessionList: string[] = [];

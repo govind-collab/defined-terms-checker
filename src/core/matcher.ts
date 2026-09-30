@@ -99,7 +99,11 @@ function fits(text: string, tokens: Token[], i: number, c: Compiled): boolean | 
     if (tok.marker || (j > 0 && !adjacent(text, tokens[i + j - 1], tok))) return null;
     const word = normalizeWord(tok.text);
     if (word === c.words[j]) continue;
-    if (j === n - 1 && singular(word) === singular(c.words[j])) {
+    // "Parties" for "Party" either way, but a lowercase word only as the term's plural: "good" is not "Goods"
+    if (
+      j === n - 1 &&
+      (tok.capital ? singular(word) === singular(c.words[j]) : singular(word) === c.words[j])
+    ) {
       stemmed = true;
       continue;
     }

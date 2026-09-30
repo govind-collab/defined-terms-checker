@@ -284,6 +284,15 @@ describe('analyze: lowercase uses', () => {
     expect(result.findings).toEqual([]);
   });
 
+  it('does not read an adjective as a lowercase use of a plural term', () => {
+    const result = run([
+      '"Goods" means the products listed in Schedule 1.',
+      '"Supplier" means Acme Limited.',
+      'The Supplier shall deliver the Goods in good faith and with good title.',
+    ]);
+    expect(result.findings).toEqual([]);
+  });
+
   it('reports a lowercase use of a defined term', () => {
     const result = run([...BASE, 'The confidential information shall be returned to the Party.']);
     expect(only(result, 'lowercase')).toEqual(['Confidential Information']);

@@ -80,6 +80,15 @@ describe('analyze: used but never defined', () => {
     expect(only(kept, 'undefined')).toEqual(['Confidential Materials']);
   });
 
+  it('always drops a sentence-opening function word', () => {
+    const result = run([
+      ...BASE,
+      'Any dispute is settled by arbitration seated in The Hague.',
+      'The Party shall pay. The Agreement ends on the Effective Date.',
+    ]);
+    expect(result.findings).toEqual([]);
+  });
+
   it('reports a longer phrase built around a defined term', () => {
     const result = run([
       '"Services" means the services in Schedule 1.',

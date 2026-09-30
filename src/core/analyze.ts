@@ -336,8 +336,11 @@ function collectCandidates(
   const emit = (ids: number[]): void => {
     let phrase = ids;
     const first = tokens[phrase[0]];
-    // "The Effective Date": a sentence-opening word is dropped unless it is capitalized elsewhere mid-sentence.
-    if (first.sentenceStart && !midCaps.has(stripPossessive(first.text))) {
+    // The sentence-opening word goes unless the document also capitalizes it mid-sentence. "The" always goes.
+    if (
+      first.sentenceStart &&
+      (FUNCTION_WORDS.has(normalizeWord(first.text)) || !midCaps.has(stripPossessive(first.text)))
+    ) {
       phrase = phrase.slice(1);
       while (phrase.length > 0 && !tokens[phrase[0]].capital) phrase = phrase.slice(1);
     }

@@ -186,7 +186,7 @@ const CITIES = [
   'orlando', 'tampa', 'jacksonville', 'nashville', 'indianapolis', 'detroit', 'minneapolis',
   'st. louis', 'saint louis', 'cleveland', 'cincinnati', 'pittsburgh', 'baltimore', 'richmond',
   'raleigh', 'charlotte', 'toronto', 'vancouver', 'montreal', 'ottawa', 'sydney', 'melbourne',
-  'paris', 'berlin', 'frankfurt', 'munich', 'amsterdam', 'zurich', 'geneva', 'dublin', 'edinburgh',
+  'paris', 'berlin', 'frankfurt', 'munich', 'amsterdam', 'the hague', 'zurich', 'geneva', 'dublin', 'edinburgh',
   'glasgow', 'belfast', 'cardiff', 'manchester', 'birmingham', 'brussels', 'vienna', 'madrid',
   'barcelona', 'rome', 'milan', 'lisbon', 'stockholm', 'oslo', 'copenhagen', 'helsinki', 'warsaw',
   'prague', 'budapest', 'athens', 'istanbul', 'kyiv', 'moscow', 'cairo', 'nairobi', 'lagos',

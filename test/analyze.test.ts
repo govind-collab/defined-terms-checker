@@ -141,6 +141,15 @@ describe('analyze: used but never defined', () => {
     expect(result.findings).toEqual([]);
   });
 
+  it('skips a legal suffix split off by a comma and the name in front of it', () => {
+    const result = run([
+      ...BASE,
+      'This Agreement is between Amazon.com, Inc. and Contoso, Inc. Each Party signs it.',
+      'Contoso, Inc. pays the Purpose fee under this Agreement.',
+    ]);
+    expect(result.findings).toEqual([]);
+  });
+
   it('reports a phrase after a statute once the sentence ends', () => {
     const result = run(['The Companies Act 2006 applies. The Board of Directors meets monthly.']);
     expect(only(result, 'undefined')).toEqual(['Board of Directors']);

@@ -369,7 +369,14 @@ function collectCandidates(
     const words = phrase.map((k) => tokens[k].text);
     const lowers = words.map(normalizeWord);
     const capitals = phrase.filter((k) => tokens[k].capital);
-    if (words.length > 1 && lowers.some((w) => CORPORATE_SUFFIXES.has(w))) return;
+    if (lowers.some((w) => CORPORATE_SUFFIXES.has(w))) return;
+    // "Contoso, Inc.": the comma splits the name from its suffix
+    if (
+      next !== undefined &&
+      CORPORATE_SUFFIXES.has(normalizeWord(next.text)) &&
+      /^,\s*$/.test(text.slice(tokens[last].end, next.start))
+    )
+      return;
     if (HONORIFICS.has(lowers[0])) return;
     if (STRUCTURAL_WORDS.has(lowers[0]) && words.length <= 2) return;
     if (lowers.some((w) => INSTRUMENT_WORDS.has(w))) return;

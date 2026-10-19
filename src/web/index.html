@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Defined Terms Checker</title>
+    <link rel="stylesheet" href="taskpane.css" />
+    <style>
+      body {
+        font-size: 14px;
+      }
+      #app {
+        max-width: 760px;
+        margin: 0 auto;
+        padding-top: 24px;
+      }
+    </style>
+  </head>
+  <body>
+    <main id="app">
+      <header>
+        <h1>Defined Terms Checker</h1>
+        <p class="hint">
+          The checks from the Word add-in, run on the text below. Each line is a paragraph. The sample is a
+          short NDA with 6 planted problems; paste a contract of your own to try it. Nothing leaves the
+          browser.
+          <a href="https://github.com/govind-collab/defined-terms-checker">Source on GitHub</a>.
+        </p>
+      </header>
+
+      <textarea id="text" aria-label="Contract text" spellcheck="false"></textarea>
+
+      <section class="controls">
+        <button id="check" type="button" class="primary">Check text</button>
+        <label><input id="opt-single" type="checkbox" checked /> Read 'single quotes' as term quotes</label>
+        <label><input id="opt-lower" type="checkbox" checked /> Report lowercase uses</label>
+      </section>
+
+      <p id="summary" class="summary" hidden></p>
+      <section id="findings" aria-label="Findings"></section>
+    </main>
+  </body>
+</html>

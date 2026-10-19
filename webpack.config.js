@@ -14,7 +14,7 @@ module.exports = async (env, argv) => {
   const config = {
     mode: production ? 'production' : 'development',
     devtool: production ? false : 'source-map',
-    entry: { taskpane: './src/taskpane/taskpane.ts' },
+    entry: { taskpane: './src/taskpane/taskpane.ts', web: './src/web/web.ts' },
     output: {
       path: path.resolve(__dirname, 'dist'),
       filename: '[name].js',
@@ -38,10 +38,17 @@ module.exports = async (env, argv) => {
         chunks: ['taskpane'],
         scriptLoading: 'blocking',
       }),
+      // The same checks on pasted text, for a browser outside Word.
+      new HtmlWebpackPlugin({
+        filename: 'index.html',
+        template: './src/web/index.html',
+        chunks: ['web'],
+      }),
       new CopyWebpackPlugin({
         patterns: [
           { from: 'assets', to: 'assets' },
           { from: 'src/taskpane/taskpane.css', to: 'taskpane.css' },
+          { from: 'test/fixtures/sample-nda.txt', to: 'sample-nda.txt' },
           {
             from: 'manifest.xml',
             to: 'manifest.xml',

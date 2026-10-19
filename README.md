@@ -24,7 +24,11 @@ term can be put on an ignore list, kept per document.
 
 ## Try it
 
-You need Node 22.15 or newer and Word (Microsoft 365 on Windows or Mac, or Word on the web).
+The same checks run in a browser on pasted text at https://govind-collab.github.io/defined-terms-checker/,
+with the sample agreement loaded.
+
+To run the add-in in Word you need Node 22.15 or newer and Word (Microsoft 365 on Windows or Mac, or Word
+on the web).
 
 ```bash
 npm install
@@ -42,8 +46,8 @@ page "Sideload Office Add-ins for testing" covers Windows, Mac and the web.
 ## How it works
 
 `src/core` is plain TypeScript with no Office dependency: paragraphs in, findings out, all tested in Node.
-`src/office` reads the paragraphs and selects a finding, and `src/taskpane` draws the pane. The rules and
-the reasons for them are in [docs/design.md](docs/design.md).
+`src/office` reads the paragraphs and selects a finding, `src/taskpane` draws the pane and `src/web` is the
+browser page. The rules and the reasons for them are in [docs/design.md](docs/design.md).
 
 ## What it does not do
 
@@ -55,8 +59,8 @@ the reasons for them are in [docs/design.md](docs/design.md).
 
 ## Commands
 
-`npm test` (110 tests), `npm run lint`, `npm run typecheck`, `npm run build` (about 37 KB of JavaScript in
-`dist/`), `npm run validate` (the manifest), `npm start` and `npm run stop`. To host the add-in somewhere
+`npm test` (110 tests), `npm run lint`, `npm run typecheck`, `npm run build` (the add-in and the browser page
+in `dist/`), `npm run validate` (the manifest), `npm start` and `npm run stop`. To host the add-in somewhere
 other than localhost, set `ADDIN_URL` for the build: `ADDIN_URL=https://example.com/terms/ npm run build`
 rewrites the URLs in `dist/manifest.xml`.
 
